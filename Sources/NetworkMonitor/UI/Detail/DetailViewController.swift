@@ -20,6 +20,7 @@ struct BodyItem: Hashable {
   let body: Data?
 }
 
+@available(iOS 14, *)
 final class DetailViewController: UICollectionViewController {
   lazy var modelObjects = [
     HeaderItem(title: "Overview", fields: request.overview().map { .field(FieldItem(title: $0.key, subtitle: $0.value)) } ),
@@ -146,6 +147,7 @@ final class DetailViewController: UICollectionViewController {
   }
 }
 
+@available(iOS 14, *)
 extension DetailViewController {
   override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
     guard let body = dataSource.itemIdentifier(for: indexPath) else {

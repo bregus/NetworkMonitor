@@ -1,5 +1,6 @@
 import UIKit
 
+@available(iOS 13, *)
 final class RequestCell: UITableViewCell {
   private let codeIndicatorView: UIView = UIView()
   private let methodLabel: UILabel = UILabel()

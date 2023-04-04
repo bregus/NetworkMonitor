@@ -1,5 +1,6 @@
 import UIKit
 
+@available(iOS 13, *)
 final class BodyDetailViewController: UIViewController {
   private let textView = UITextView()
   private var searchController: UISearchController?
@@ -54,6 +55,7 @@ final class BodyDetailViewController: UIViewController {
   }
 }
 
+@available(iOS 13, *)
 extension BodyDetailViewController: UISearchResultsUpdating {
   func updateSearchResults(for searchController: UISearchController) {
 //    if searchController.searchBar.text?.isEmpty == false {
@@ -65,6 +67,7 @@ extension BodyDetailViewController: UISearchResultsUpdating {
   }
 }
 
+@available(iOS 13, *)
 extension BodyDetailViewController: UISearchBarDelegate {
   func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
     searchBar.resignFirstResponder()
