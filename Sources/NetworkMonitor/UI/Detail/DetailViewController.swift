@@ -82,12 +82,12 @@ final class DetailViewController: UICollectionViewController {
     }
 
     let bodyCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, BodyItem> {
-      (cell, indexPath, _) in
+      (cell, indexPath, body) in
 
       // Set symbolItem's data to cell
       var content = cell.defaultContentConfiguration()
       content.text = "Open body"
-      content.textProperties.color = .systemBlue
+      content.textProperties.color = body.body == nil ? .secondaryLabel : .systemBlue
       content.textProperties.alignment = .center
       cell.contentConfiguration = content
     }
@@ -154,9 +154,9 @@ extension DetailViewController {
       collectionView.deselectItem(at: indexPath, animated: true)
       return
     }
-    if case .body(let bodyItem) = body {
+    if case .body(let bodyItem) = body, let body = bodyItem.body {
       let vc = BodyDetailViewController()
-      vc.setBody(bodyItem.body)
+      vc.setBody(body)
       navigationController?.pushViewController(vc, animated: true)
     }
   }
