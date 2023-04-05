@@ -3,10 +3,12 @@ import UIKit
 @available(iOS 13, *)
 final class BodyDetailViewController: UIViewController {
   private let textView: UITextView = UITextView()
-  private let imageView: ImageScrollView = ImageScrollView()
+
   private var searchController: UISearchController?
   private var highlightedWords: [NSTextCheckingResult] = []
   private var indexOfWord: Int = 0
+
+  private lazy var imageView: ImageScrollView = ImageScrollView(frame: view.bounds)
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -80,7 +82,16 @@ final class BodyDetailViewController: UIViewController {
   }
 
   @objc private func shareContent() {
-
+    var items: [Any]
+    if let image = imageView.imageZoomView.image {
+      items = [image]
+    } else if let text = textView.text {
+      items = [text]
+    } else {
+      return
+    }
+    let activity = UIActivityViewController(activityItems: items, applicationActivities: nil)
+    present(activity, animated: true)
   }
 }
 
