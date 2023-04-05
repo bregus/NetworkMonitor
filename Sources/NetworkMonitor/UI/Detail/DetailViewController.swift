@@ -98,13 +98,11 @@ final class DetailViewController: UICollectionViewController {
 
       switch listItem {
       case .header(let headerItem):
-        // Dequeue header cell
         let cell = collectionView.dequeueConfiguredReusableCell(using: headerCellRegistration,
                                                                 for: indexPath,
                                                                 item: headerItem)
         return cell
       case .field(let symbolItem):
-        // Dequeue symbol cell
         let cell = collectionView.dequeueConfiguredReusableCell(using: symbolCellRegistration,
                                                                 for: indexPath,
                                                                 item: symbolItem)
@@ -139,7 +137,7 @@ final class DetailViewController: UICollectionViewController {
       sectionSnapshot.append(symbolListItemArray, to: headerListItem)
 
       // Expand this section by default
-      sectionSnapshot.expand([headerListItem])
+      if headerItem.title == "Overview" { sectionSnapshot.expand([headerListItem]) }
 
       // Apply section snapshot to the respective collection view section
       dataSource.apply(sectionSnapshot, to: headerItem, animatingDifferences: false)

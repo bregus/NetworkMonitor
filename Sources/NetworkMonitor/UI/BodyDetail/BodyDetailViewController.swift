@@ -3,7 +3,7 @@ import UIKit
 @available(iOS 13, *)
 final class BodyDetailViewController: UIViewController {
   private let textView: UITextView = UITextView()
-  private let imageView: UIImageView = UIImageView()
+  private let imageView: ImageScrollView = ImageScrollView()
   private var searchController: UISearchController?
   private var highlightedWords: [NSTextCheckingResult] = []
   private var indexOfWord: Int = 0
@@ -11,16 +11,14 @@ final class BodyDetailViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = .systemBackground
+    navigationItem.largeTitleDisplayMode = .never
 
     setupNavigationItems()
-    addSearchController()
   }
 
   private func setupNavigationItems() {
-    navigationItem.largeTitleDisplayMode = .never
-    //      let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(shareContent(_:)))
-    let searchButton = UIBarButtonItem(barButtonSystemItem: .search, target: self, action: #selector(showSearch))
-    navigationItem.rightBarButtonItems = [searchButton]//, shareButton]
+    let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(shareContent))
+    navigationItem.rightBarButtonItems = [shareButton]
   }
 
   @objc func showSearch() {
@@ -38,10 +36,14 @@ final class BodyDetailViewController: UIViewController {
 
     navigationItem.searchController = searchController
     definesPresentationContext = true
+
+    let searchButton = UIBarButtonItem(barButtonSystemItem: .search, target: self, action: #selector(showSearch))
+    navigationItem.rightBarButtonItems?.append(searchButton)
   }
 
   func addTextView() {
     view.addSubview(textView)
+    textView.dataDetectorTypes = .link
     textView.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
       textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -65,8 +67,9 @@ final class BodyDetailViewController: UIViewController {
   func setBody(_ body: Data) {
     if let image = UIImage(data: body) {
       addImageView()
-      imageView.image = image
+      imageView.setImage(image)
     } else {
+      addSearchController()
       addTextView()
       textView.text = body.prettyPrintedJSONString
     }
@@ -74,6 +77,10 @@ final class BodyDetailViewController: UIViewController {
 //    let attr = NSMutableAttributedString()
 //    attr.append(json ?? String(data: body ?? Data(), encoding: .utf8))
 //    textView.attributedText = attr
+  }
+
+  @objc private func shareContent() {
+
   }
 }
 
