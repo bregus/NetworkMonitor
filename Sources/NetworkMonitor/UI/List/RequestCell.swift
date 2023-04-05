@@ -28,10 +28,10 @@ final class RequestCell: UITableViewCell {
     vstack.translatesAutoresizingMaskIntoConstraints = false
     codeIndicatorView.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
-      vstack.topAnchor.constraint(equalTo: topAnchor, constant: 4),
-      vstack.leftAnchor.constraint(equalTo: leftAnchor, constant: 4),
-      vstack.rightAnchor.constraint(equalTo: rightAnchor, constant: -4),
-      vstack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -4),
+      vstack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
+      vstack.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 4),
+      vstack.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -4),
+      vstack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
       codeIndicatorView.heightAnchor.constraint(equalToConstant: 12),
       codeIndicatorView.widthAnchor.constraint(equalToConstant: 12)
     ])
@@ -76,16 +76,5 @@ final class RequestCell: UITableViewCell {
     urlLabel.text = request.url
     durationLabel.text = request.duration?.formattedMilliseconds() ?? "-"
     dateLabel.text = request.date.stringWithFormat(dateFormat: "HH:mm:ss")
-  }
-}
-
-extension Date{
-  func stringWithFormat(dateFormat: String, timezone: TimeZone? = nil) -> String?{
-    let dateFormatter = DateFormatter()
-    dateFormatter.dateFormat = dateFormat
-    if let timezone {
-      dateFormatter.timeZone = timezone
-    }
-    return dateFormatter.string(from: self)
   }
 }
