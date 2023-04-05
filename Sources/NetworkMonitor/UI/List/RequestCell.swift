@@ -28,10 +28,10 @@ final class RequestCell: UITableViewCell {
     vstack.translatesAutoresizingMaskIntoConstraints = false
     codeIndicatorView.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
-      vstack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
-      vstack.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 4),
-      vstack.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -4),
-      vstack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
+      vstack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+      vstack.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 12),
+      vstack.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -12),
+      vstack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12),
       codeIndicatorView.heightAnchor.constraint(equalToConstant: 12),
       codeIndicatorView.widthAnchor.constraint(equalToConstant: 12)
     ])
