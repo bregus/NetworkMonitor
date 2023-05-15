@@ -1,6 +1,5 @@
 import UIKit
 
-//systemFont/boldSystemFont
 let kJSONFont = UIFont.boldSystemFont(ofSize: 14)
 
 let kJSONKeyColor = UIColor(rgb: 0xff8170)

@@ -14,6 +14,13 @@ public struct NetworkMonitor {
 
   @available(iOS 14, *)
   public func presentNetworkMonitor() {
-    UIViewController.currentViewController()?.present(RequestsViewController().embended, animated: true)
+    guard let topController = UIViewController.currentViewController(), !(topController is RequestsViewController) else { return }
+    topController.present(RequestsViewController().embended, animated: true)
+  }
+
+  public func saveCustomRequest(url: URL?, data: Data?) {
+    guard let url else { return }
+    let request = RequestRepresentable(request: CustomRequest(url: url, body: data))
+    Storage.shared.saveRequest(request: request)
   }
 }

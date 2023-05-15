@@ -1,4 +1,5 @@
 import UIKit
+import SPIndicator
 
 enum ListItem: Hashable {
   case header(HeaderItem)
@@ -48,7 +49,7 @@ final class DetailViewController: UICollectionViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    self.title = request.pathComponents
+    self.title = request.path
 
     // MARK: Cell registration
     let headerCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, HeaderItem> {
@@ -137,8 +138,7 @@ final class DetailViewController: UICollectionViewController {
       sectionSnapshot.append(symbolListItemArray, to: headerListItem)
 
       // Expand this section by default
-      if headerItem.title == "Overview" { sectionSnapshot.expand([headerListItem]) }
-
+      sectionSnapshot.expand([headerListItem])
       // Apply section snapshot to the respective collection view section
       dataSource.apply(sectionSnapshot, to: headerItem, animatingDifferences: false)
     }
@@ -148,11 +148,17 @@ final class DetailViewController: UICollectionViewController {
 @available(iOS 14, *)
 extension DetailViewController {
   override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-    guard let body = dataSource.itemIdentifier(for: indexPath) else {
-      collectionView.deselectItem(at: indexPath, animated: true)
-      return
+    collectionView.deselectItem(at: indexPath, animated: true)
+    guard let cell = dataSource.itemIdentifier(for: indexPath) else { return }
+
+    if case .field(let fieldItem) = cell {
+      let indicator = SPIndicatorView(title: "Copied", preset: .done)
+      indicator.presentSide = .bottom
+      indicator.present(duration: 1, haptic: .success)
+      UIPasteboard.general.string = fieldItem.subtitle
     }
-    if case .body(let bodyItem) = body, let body = bodyItem.body {
+
+    if case .body(let bodyItem) = cell, let body = bodyItem.body {
       let vc = BodyDetailViewController()
       vc.setBody(body)
       navigationController?.pushViewController(vc, animated: true)

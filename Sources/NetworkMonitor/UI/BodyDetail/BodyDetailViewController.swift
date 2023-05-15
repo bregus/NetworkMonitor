@@ -83,7 +83,7 @@ final class BodyDetailViewController: UIViewController {
 
   @objc private func shareContent() {
     var items: [Any]
-    if let image = imageView.imageZoomView.image {
+    if let image = imageView.imageZoomView?.image {
       items = [image]
     } else if let text = textView.text {
       items = [text]

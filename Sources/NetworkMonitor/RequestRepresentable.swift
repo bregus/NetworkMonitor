@@ -1,15 +1,20 @@
 import Foundation
 
+public struct CustomRequest {
+  let url: URL
+  let body: Data?
+}
+
 public struct RequestRepresentable {
   let id: String
   let url: String
   let host: String?
   let port: Int?
-  let pathComponents: String?
+  let path: String?
   let scheme: String?
   let method: String?
   var code: Int? = nil
-  public var headers: [String: String]
+  public var headers: [String: String] = [:]
   public var responseHeaders: [String: String] = [:]
   public var httpBody: Data?
   var error: Error? = nil
@@ -24,7 +29,7 @@ public struct RequestRepresentable {
     url = request?.url?.absoluteString ?? ""
     host = request?.url?.host
     port = request?.url?.port
-    pathComponents = request?.url?.pathComponents.joined(separator: "/")
+    path = request?.url?.path
     scheme = request?.url?.scheme
     method = request?.httpMethod
     date = Date()
@@ -37,12 +42,26 @@ public struct RequestRepresentable {
     isFinished = true
   }
 
+  public init(request: CustomRequest) {
+    id = UUID().uuidString
+    url = request.url.absoluteString
+    port = request.url.port
+    host = request.url.host
+    path = request.url.path
+    method = request.url.scheme
+    code = nil
+    scheme = request.url.scheme
+    responseBody = request.body
+    date = Date()
+    isFinished = false
+  }
+
   init(request: NSURLRequest, session: URLSession?) {
     id = UUID().uuidString
     url = request.url?.absoluteString ?? ""
     host = request.url?.host
     port = request.url?.port
-    pathComponents = request.url?.pathComponents.joined()
+    path = request.url?.path
     scheme = request.url?.scheme
     date = Date()
     method = request.httpMethod ?? "GET"
@@ -101,7 +120,7 @@ public struct RequestRepresentable {
     if let method { overview["Method"] = method }
     if let code { overview["Response code"] = "\(code)" }
     if let error { overview["Error"] = String(describing: error) }
-    if let errorClientDescription { overview["URLError Description"] = String(describing: errorClientDescription) }
+    if let errorClientDescription { overview["URLError Description"] = errorClientDescription.localizedDescription }
     return overview
   }
 }
