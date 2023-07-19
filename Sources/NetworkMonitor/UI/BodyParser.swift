@@ -2,9 +2,9 @@ import UIKit
 
 let kJSONFont = UIFont.boldSystemFont(ofSize: 14)
 
-let kJSONKeyColor = UIColor(rgb: 0xff8170)
+let kJSONKeyColor = UIColor.label
 let kJSONIndexColor = UIColor(rgb: 0x4FB0CB)
-let kJSONSymbolColor = UIColor.black
+let kJSONSymbolColor = UIColor.label
 
 let kJSONNullValueColor = UIColor(rgb: 0xFF7AB2)
 let kJSONBoolValueColor = UIColor(rgb: 0xFF7AB2)
@@ -39,7 +39,7 @@ extension NSAttributedString {
       return attributedString(arr: arr, level: level, ext: ext)
     case let number as NSNumber:
       if number.isBool {
-        return NSAttributedString.init(string: number.boolValue ? "true":"false", color: kJSONBoolValueColor)
+        return NSAttributedString.init(string: number.boolValue ? "true" : "false", color: kJSONBoolValueColor)
       }
       var string = "\(number)"
       if number.objCType.pointee == 100 {
@@ -66,7 +66,8 @@ extension NSAttributedString {
 
     for (idx, element) in dic.enumerated() {
 
-      let key = "\"" + element.key + "\""
+//      let key = "\"" + element.key + "\""
+      let key = element.key
 
       let width = (key as NSString).boundingRect(with: CGSize.init(width: CGFloat.infinity, height: kJSONFont.lineHeight), options: NSStringDrawingOptions.usesLineFragmentOrigin, attributes: [NSAttributedString.Key.font: kJSONFont], context: nil).size.width + 10
 
@@ -77,7 +78,7 @@ extension NSAttributedString {
 
       mattr.append(NSAttributedString.init(string: key, color: kJSONKeyColor, style: para))
 
-      mattr.append(NSAttributedString.init(string: ":", color: kJSONSymbolColor))
+      mattr.append(NSAttributedString.init(string: ": ", color: kJSONSymbolColor))
 
       mattr.append(.render(element: element.value, level: level + 1, ext: width + ext))
 
@@ -117,9 +118,9 @@ extension NSAttributedString {
       para.headIndent = CGFloat(level * 10) + width + ext + 5
       para.lineBreakMode = .byCharWrapping
 
-      mattr.append(NSAttributedString.init(string: index, color: kJSONIndexColor, style: para))
-
-      mattr.append(NSAttributedString.init(string: ":", color: kJSONSymbolColor))
+//      mattr.append(NSAttributedString.init(string: index, color: kJSONIndexColor, style: para))
+//
+//      mattr.append(NSAttributedString.init(string: ": ", color: kJSONSymbolColor))
 
       mattr.append(.render(element: element, level: level + 1, ext: width + ext))
 

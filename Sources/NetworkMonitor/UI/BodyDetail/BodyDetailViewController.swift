@@ -46,6 +46,7 @@ final class BodyDetailViewController: UIViewController {
   func addTextView() {
     view.addSubview(textView)
     textView.dataDetectorTypes = .link
+    textView.isEditable = false
     textView.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
       textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -71,14 +72,14 @@ final class BodyDetailViewController: UIViewController {
       addImageView()
       imageView.setImage(image)
     } else {
-      addSearchController()
+//      addSearchController()
       addTextView()
       textView.text = body.prettyPrintedJSONString
+//      let json = try? JSONSerialization.jsonObject(with: body, options: .mutableContainers)
+//      let attr = NSMutableAttributedString()
+//      attr.append(json ?? String(data: body, encoding: .utf8))
+//      textView.attributedText = attr
     }
-//    let json = try? JSONSerialization.jsonObject(with: body ?? Data(), options: .mutableContainers)
-//    let attr = NSMutableAttributedString()
-//    attr.append(json ?? String(data: body ?? Data(), encoding: .utf8))
-//    textView.attributedText = attr
   }
 
   @objc private func shareContent() {

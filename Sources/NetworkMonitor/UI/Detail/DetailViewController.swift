@@ -2,12 +2,14 @@ import UIKit
 import SPIndicator
 
 enum ListItem: Hashable {
-  case header(HeaderItem)
+  case overview(SectionItem)
+  case header(SectionItem)
   case field(FieldItem)
   case body(BodyItem)
 }
 
-struct HeaderItem: Hashable {
+struct SectionItem: Hashable {
+  let icon: String
   let title: String
   let fields: [ListItem]
 }
@@ -24,14 +26,14 @@ struct BodyItem: Hashable {
 @available(iOS 14, *)
 final class DetailViewController: UICollectionViewController {
   lazy var modelObjects = [
-    HeaderItem(title: "Overview", fields: request.overview().map { .field(FieldItem(title: $0.key, subtitle: $0.value)) } ),
-    HeaderItem(title: "Request headers", fields: request.headers.map { .field(FieldItem(title: $0.key, subtitle: $0.value)) }),
-    HeaderItem(title: "Request body", fields: [.body(BodyItem(body: request.httpBody))]),
-    HeaderItem(title: "Response Headers", fields: request.responseHeaders.map { .field(FieldItem(title: $0.key, subtitle: $0.value)) }),
-    HeaderItem(title: "Response body", fields: [.body(BodyItem(body: request.responseBody))])
+    SectionItem(icon: "eye.square", title: "Overview", fields: request.overview().map { .field(FieldItem(title: $0.key, subtitle: $0.value)) } ),
+    SectionItem(icon: "list.bullet.rectangle", title: "Request headers", fields: request.requestHeaders.map { .field(FieldItem(title: $0.key, subtitle: $0.value)) }),
+    SectionItem(icon: "arrow.up.circle.fill", title: "Request body", fields: [.body(BodyItem(body: request.requestBody))]),
+    SectionItem(icon: "list.bullet.rectangle", title: "Response Headers", fields: request.responseHeaders.map { .field(FieldItem(title: $0.key, subtitle: $0.value)) }),
+    SectionItem(icon: "arrow.down.circle.fill", title: "Response body", fields: [.body(BodyItem(body: request.responseBody))])
   ]
 
-  var dataSource: UICollectionViewDiffableDataSource<HeaderItem, ListItem>!
+  var dataSource: UICollectionViewDiffableDataSource<SectionItem, ListItem>!
   var request: RequestRepresentable
 
   init(request: RequestRepresentable) {
@@ -52,18 +54,31 @@ final class DetailViewController: UICollectionViewController {
     self.title = request.path
 
     // MARK: Cell registration
-    let headerCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, HeaderItem> {
-      (cell, indexPath, headerItem) in
+    let overViewCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, SectionItem> {
+      (cell, indexPath, sectionItem) in
 
-      // Set headerItem's data to cell
+      // Set sectionItem's data to cell
       var content = cell.defaultContentConfiguration()
-      content.text = headerItem.title
+      content.text = sectionItem.title
+      content.textProperties.font = .systemFont(ofSize: 14, weight: .medium)
+      content.image = UIImage(systemName: sectionItem.icon)
+      cell.contentConfiguration = content
+      cell.accessories = [.disclosureIndicator()]
+    }
+
+    let headerCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, SectionItem> {
+      (cell, indexPath, sectionItem) in
+
+      // Set sectionItem's data to cell
+      var content = cell.defaultContentConfiguration()
+      content.text = sectionItem.title
       content.textProperties.font = .systemFont(ofSize: 16, weight: .medium)
+      content.image = UIImage(systemName: sectionItem.icon)
       cell.contentConfiguration = content
 
       // Add outline disclosure accessory
       // With this accessory, the header cell's children will expand / collapse when the header cell is tapped.
-      if !headerItem.fields.isEmpty {
+      if !sectionItem.fields.isEmpty {
         let headerDisclosureOption = UICellAccessory.OutlineDisclosureOptions(style: .header)
         cell.accessories = [.outlineDisclosure(options:headerDisclosureOption)]
       }
@@ -94,14 +109,19 @@ final class DetailViewController: UICollectionViewController {
     }
 
     // MARK: Initialize data source
-    dataSource = UICollectionViewDiffableDataSource<HeaderItem, ListItem>(collectionView: collectionView) {
+    dataSource = UICollectionViewDiffableDataSource<SectionItem, ListItem>(collectionView: collectionView) {
       (collectionView, indexPath, listItem) -> UICollectionViewCell? in
 
       switch listItem {
-      case .header(let headerItem):
+      case .overview(let overview):
+        let cell = collectionView.dequeueConfiguredReusableCell(using: overViewCellRegistration,
+                                                                for: indexPath,
+                                                                item: overview)
+        return cell
+      case .header(let sectionItem):
         let cell = collectionView.dequeueConfiguredReusableCell(using: headerCellRegistration,
                                                                 for: indexPath,
-                                                                item: headerItem)
+                                                                item: sectionItem)
         return cell
       case .field(let symbolItem):
         let cell = collectionView.dequeueConfiguredReusableCell(using: symbolCellRegistration,
@@ -117,30 +137,30 @@ final class DetailViewController: UICollectionViewController {
     }
 
     // MARK: Setup snapshots
-    var dataSourceSnapshot = NSDiffableDataSourceSnapshot<HeaderItem, ListItem>()
+    var dataSourceSnapshot = NSDiffableDataSourceSnapshot<SectionItem, ListItem>()
 
-    // Create collection view section based on number of HeaderItem in modelObjects
+    // Create collection view section based on number of sectionItem in modelObjects
     dataSourceSnapshot.appendSections(modelObjects)
     dataSource.apply(dataSourceSnapshot)
 
     // Loop through each header item so that we can create a section snapshot for each respective header item.
-    for headerItem in modelObjects {
+    for (index, sectionItem) in modelObjects.enumerated() {
 
       // Create a section snapshot
       var sectionSnapshot = NSDiffableDataSourceSectionSnapshot<ListItem>()
 
       // Create a header ListItem & append as parent
-      let headerListItem = ListItem.header(headerItem)
-      sectionSnapshot.append([headerListItem])
+      let sectionListItem = index == 0 ? ListItem.overview(sectionItem) : ListItem.header(sectionItem)
+      sectionSnapshot.append([sectionListItem])
 
-      // Create an array of symbol ListItem & append as child of headerListItem
-      let symbolListItemArray = headerItem.fields.map { $0 }
-      sectionSnapshot.append(symbolListItemArray, to: headerListItem)
+      // Create an array of symbol ListItem & append as child of sectionListItem
+      let symbolListItemArray = sectionItem.fields.map { $0 }
+      sectionSnapshot.append(symbolListItemArray, to: sectionListItem)
 
       // Expand this section by default
-      sectionSnapshot.expand([headerListItem])
+      if index == 0 { sectionSnapshot.expand([sectionListItem]) }
       // Apply section snapshot to the respective collection view section
-      dataSource.apply(sectionSnapshot, to: headerItem, animatingDifferences: false)
+      dataSource.apply(sectionSnapshot, to: sectionItem, animatingDifferences: false)
     }
   }
 }

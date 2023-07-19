@@ -8,21 +8,27 @@ final class RequestCell: UITableViewCell {
   private let durationLabel: UILabel = UILabel()
   private let dateLabel: UILabel = UILabel()
   private let urlLabel: UILabel = UILabel()
+  private let requestWeight: UILabel = UILabel()
+  private let responseWeight: UILabel = UILabel()
 
   override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
     super.init(style: style, reuseIdentifier: reuseIdentifier)
 
-    let hstack = UIStackView(arrangedSubviews: [codeIndicatorView, methodLabel, codeLabel, durationLabel, dateLabel, UIView()])
+    let hstack = UIStackView(arrangedSubviews: [codeIndicatorView, codeLabel, UIView(), dateLabel])
     hstack.spacing = 4
-    let vstack = UIStackView(arrangedSubviews: [hstack, urlLabel])
+    let hstack2 = UIStackView(arrangedSubviews: [methodLabel, UIView(), requestWeight, responseWeight, durationLabel])
+    hstack2.spacing = 8
+    let vstack = UIStackView(arrangedSubviews: [hstack, urlLabel, hstack2])
     vstack.spacing = 8
     vstack.axis = .vertical
 
-    methodLabel.font = .systemFont(ofSize: 15, weight: .bold)
-    codeLabel.font = .systemFont(ofSize: 15, weight: .semibold)
-    durationLabel.font = .systemFont(ofSize: 15)
+    methodLabel.font = .systemFont(ofSize: 12, weight: .semibold)
+    codeLabel.font = .systemFont(ofSize: 14, weight: .bold)
+    durationLabel.font = .systemFont(ofSize: 12)
     dateLabel.font = .systemFont(ofSize: 14, weight: .semibold)
     urlLabel.font = .systemFont(ofSize: 14, weight: .medium)
+    requestWeight.font = .systemFont(ofSize: 12, weight: .medium)
+    responseWeight.font = .systemFont(ofSize: 12, weight: .medium)
 
     contentView.addSubview(vstack)
     vstack.translatesAutoresizingMaskIntoConstraints = false
@@ -36,8 +42,13 @@ final class RequestCell: UITableViewCell {
       codeIndicatorView.widthAnchor.constraint(equalToConstant: 12)
     ])
 
-    durationLabel.textColor = .secondaryLabel
-    dateLabel.textColor = .tertiaryLabel
+    methodLabel.textColor = .secondaryLabel
+
+    requestWeight.textColor = .init(rgb: 0x909097)
+    responseWeight.textColor = .init(rgb: 0x909097)
+    durationLabel.textColor = .init(rgb: 0x909097)
+
+    dateLabel.textColor = .secondaryLabel
     urlLabel.numberOfLines = 0
   }
 
@@ -53,6 +64,9 @@ final class RequestCell: UITableViewCell {
     methodLabel.text = request.method?.uppercased()
     codeLabel.isHidden = request.code == nil ? true : false
     codeLabel.text = request.code != nil ? String(request.code ?? 0) : "-"
+    requestWeight.setIconAndText(icon: "arrow.up", text: request.requestBody?.weight ?? "0 KB")
+    responseWeight.setIconAndText(icon: "arrow.down", text: request.responseBody?.weight ?? "0 KB")
+    
     if let code = request.code {
       var color: UIColor
       switch code {
@@ -74,7 +88,7 @@ final class RequestCell: UITableViewCell {
       codeLabel.textColor = .secondaryLabel
     }
     urlLabel.text = request.url
-    durationLabel.text = request.duration?.formattedMilliseconds() ?? "-"
+    durationLabel.setIconAndText(icon: "clock", text: request.duration?.formattedMilliseconds() ?? "-")
     dateLabel.text = request.date.stringWithFormat(dateFormat: "HH:mm:ss")
   }
 }

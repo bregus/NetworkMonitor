@@ -14,33 +14,16 @@ public struct RequestRepresentable {
   let scheme: String?
   let method: String?
   var code: Int? = nil
-  public var headers: [String: String] = [:]
-  public var responseHeaders: [String: String] = [:]
-  public var httpBody: Data?
   var error: Error? = nil
   var duration: Double?
   let date: Date
-  public var responseBody: Data? = nil
-  public var errorClientDescription: Error? = nil
+  var errorClientDescription: Error? = nil
   var isFinished: Bool
 
-  public init(request: URLRequest?, response: HTTPURLResponse?, error: Error?, data: Data?) {
-    id = UUID().uuidString
-    url = request?.url?.absoluteString ?? ""
-    host = request?.url?.host
-    port = request?.url?.port
-    path = request?.url?.path
-    scheme = request?.url?.scheme
-    method = request?.httpMethod
-    date = Date()
-    headers = request?.allHTTPHeaderFields ?? [:]
-    httpBody = request?.httpBody//?.prettyPrintedJSONString
-    code = response?.statusCode
-    self.error = error
-    responseHeaders = response?.allHeaderFields.reduce(into: [String:String]()) { $0["\($1.key)"] = "\($1.value)" } ?? [:]
-    responseBody = data//?.prettyPrintedJSONString
-    isFinished = true
-  }
+  var requestHeaders: [String: String] = [:]
+  var requestBody: Data?
+  var responseHeaders: [String: String] = [:]
+  var responseBody: Data? = nil
 
   public init(request: CustomRequest) {
     id = UUID().uuidString
@@ -67,7 +50,7 @@ public struct RequestRepresentable {
     method = request.httpMethod ?? "GET"
 //    credentials = [:]
     var headers = request.allHTTPHeaderFields ?? [:]
-    httpBody = request.httpBody
+    requestBody = request.httpBody
     isFinished = false
 
 
@@ -78,7 +61,7 @@ public struct RequestRepresentable {
         guard let key = element.0 as? String, let value = element.1 as? String else { return }
         headers[key] = value
       }
-    self.headers = headers
+    self.requestHeaders = headers
 
     // if the target server uses HTTP Basic Authentication, collect username and password
 //    if let credentialStorage = session?.configuration.urlCredentialStorage,
@@ -121,6 +104,9 @@ public struct RequestRepresentable {
     if let code { overview["Response code"] = "\(code)" }
     if let error { overview["Error"] = String(describing: error) }
     if let errorClientDescription { overview["URLError Description"] = errorClientDescription.localizedDescription }
+//    URLComponents(string: url)?.queryItems?.reduce(into: [String:String](), { partialResult, item in
+//      partialResult[item.name] = item.value
+//    })
     return overview
   }
 }

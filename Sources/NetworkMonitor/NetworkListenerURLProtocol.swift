@@ -42,7 +42,7 @@ public final class NetwrokListenerUrlProtocol: URLProtocol {
 
   public override func stopLoading() {
     sessionTask?.cancel()
-    currentRequest?.httpBody = body(from: request)
+    currentRequest?.requestBody = body(from: request)
     if let startDate = currentRequest?.date{
       currentRequest?.duration = fabs(startDate.timeIntervalSinceNow) * 1000 //Find elapsed time and convert to milliseconds
     }

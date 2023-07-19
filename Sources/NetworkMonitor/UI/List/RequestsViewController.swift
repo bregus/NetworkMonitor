@@ -98,6 +98,7 @@ extension RequestsViewController {
   override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let cell = tableView.dequeueReusableCell(withIdentifier: RequestCell.reuseIdentifier, for: indexPath) as! RequestCell
     cell.populate(request: filteredRequests[indexPath.item])
+    cell.accessoryType = .disclosureIndicator
     return cell
   }
 
