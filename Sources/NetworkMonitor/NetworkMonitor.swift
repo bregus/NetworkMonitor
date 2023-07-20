@@ -18,9 +18,9 @@ public struct NetworkMonitor {
     topController.present(RequestsViewController().embended, animated: true)
   }
 
-  public func saveCustomRequest(url: URL?, data: Data?) {
+  public func saveCustomRequest(url: URL?, data: Data?, parameters: [String: String] = [:]) {
     guard let url else { return }
-    let request = RequestRepresentable(request: CustomRequest(url: url, body: data))
+    let request = RequestRepresentable(request: CustomRequest(url: url, body: data, parameters: parameters))
     Storage.shared.saveRequest(request: request)
   }
 }

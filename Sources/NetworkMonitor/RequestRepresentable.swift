@@ -3,6 +3,7 @@ import Foundation
 public struct CustomRequest {
   let url: URL
   let body: Data?
+  let parameters: [String: String]
 }
 
 public struct RequestRepresentable {
@@ -14,9 +15,10 @@ public struct RequestRepresentable {
   let scheme: String?
   let method: String?
   var code: Int? = nil
+  let date: Date
+
   var error: Error? = nil
   var duration: Double?
-  let date: Date
   var errorClientDescription: Error? = nil
   var isFinished: Bool
 
@@ -53,8 +55,6 @@ public struct RequestRepresentable {
     requestBody = request.httpBody
     isFinished = false
 
-
-    // collect all HTTP Request headers except the "Cookie" header. Many request representations treat cookies with special parameters or structures. For cookie collection, refer to the bottom part of this method
     session?.configuration.httpAdditionalHeaders?
       .filter {  $0.0 != AnyHashable("Cookie") }
       .forEach { element in

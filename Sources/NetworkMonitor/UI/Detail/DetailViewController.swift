@@ -38,8 +38,9 @@ final class DetailViewController: UICollectionViewController {
   ]
 
   lazy var logModelObjects = [
-    SectionItem(icon: "eye.square", title: "Log", fields: [.field(FieldItem(title: "Log", subtitle: request.host ?? ""))]),
-    SectionItem(icon: "list.dash", title: "Log", fields: (request.responseBody?.dict ?? [:]).map { .field(FieldItem(title: $0.key, subtitle: String(describing: $0.value))) })
+    SectionItem(icon: "eye.square", title: "Log", fields: [.field(FieldItem(title: "", subtitle: request.host ?? ""))]),
+    SectionItem(icon: "", title: "Events", fields: (request.requestHeaders).map { .field(FieldItem(title: $0.key, subtitle: String(describing: $0.value))) }),
+    SectionItem(icon: "", title: "Parameters", fields: (request.responseBody?.dict ?? [:]).map { .field(FieldItem(title: $0.key, subtitle: String(describing: $0.value))) })
   ]
 
   var dataSource: UICollectionViewDiffableDataSource<SectionItem, ListItem>!
@@ -72,7 +73,7 @@ final class DetailViewController: UICollectionViewController {
       content.textProperties.font = .systemFont(ofSize: 14, weight: .medium)
       content.image = UIImage(systemName: sectionItem.icon)
       cell.contentConfiguration = content
-      cell.accessories = [.disclosureIndicator()]
+//      cell.accessories = [.disclosureIndicator()]
     }
 
     let headerCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, SectionItem> {
@@ -167,7 +168,7 @@ final class DetailViewController: UICollectionViewController {
       sectionSnapshot.append(symbolListItemArray, to: sectionListItem)
 
       // Expand this section by default
-      if index == 0 { sectionSnapshot.expand([sectionListItem]) }
+      if index == 0 || request.scheme == "debug" { sectionSnapshot.expand([sectionListItem]) }
       // Apply section snapshot to the respective collection view section
       dataSource.apply(sectionSnapshot, to: sectionItem, animatingDifferences: false)
     }
