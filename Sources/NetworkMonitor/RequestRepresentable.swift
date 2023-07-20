@@ -36,6 +36,7 @@ public struct RequestRepresentable {
     method = request.url.scheme
     code = nil
     scheme = request.url.scheme
+    requestHeaders = request.parameters
     responseBody = request.body
     date = Date()
     isFinished = false
