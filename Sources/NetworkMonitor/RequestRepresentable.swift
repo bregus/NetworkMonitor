@@ -104,9 +104,6 @@ public struct RequestRepresentable {
     if let code { overview["Response code"] = "\(code)" }
     if let error { overview["Error"] = String(describing: error) }
     if let errorClientDescription { overview["URLError Description"] = errorClientDescription.localizedDescription }
-//    URLComponents(string: url)?.queryItems?.reduce(into: [String:String](), { partialResult, item in
-//      partialResult[item.name] = item.value
-//    })
     return overview
   }
 }
@@ -119,5 +116,10 @@ extension Data {
     else { return nil }
 
     return String(data: data, encoding: .utf8)?.replacingOccurrences(of: "\\/", with: "/")
+  }
+
+  var dict: [String: Any] {
+    guard let object = try? JSONSerialization.jsonObject(with: self, options: []) as? [String: Any] else { return [:] }
+    return object
   }
 }

@@ -25,12 +25,21 @@ struct BodyItem: Hashable {
 
 @available(iOS 14, *)
 final class DetailViewController: UICollectionViewController {
+  var objects: [SectionItem] {
+    request.scheme == "debug" ? logModelObjects : modelObjects
+  }
+
   lazy var modelObjects = [
     SectionItem(icon: "eye.square", title: "Overview", fields: request.overview().map { .field(FieldItem(title: $0.key, subtitle: $0.value)) } ),
     SectionItem(icon: "list.bullet.rectangle", title: "Request headers", fields: request.requestHeaders.map { .field(FieldItem(title: $0.key, subtitle: $0.value)) }),
     SectionItem(icon: "arrow.up.circle.fill", title: "Request body", fields: [.body(BodyItem(body: request.requestBody))]),
     SectionItem(icon: "list.bullet.rectangle", title: "Response Headers", fields: request.responseHeaders.map { .field(FieldItem(title: $0.key, subtitle: $0.value)) }),
     SectionItem(icon: "arrow.down.circle.fill", title: "Response body", fields: [.body(BodyItem(body: request.responseBody))])
+  ]
+
+  lazy var logModelObjects = [
+    SectionItem(icon: "eye.square", title: "Log", fields: [.field(FieldItem(title: "Log", subtitle: request.host ?? ""))]),
+    SectionItem(icon: "list.dash", title: "Log", fields: (request.responseBody?.dict ?? [:]).map { .field(FieldItem(title: $0.key, subtitle: String(describing: $0.value))) })
   ]
 
   var dataSource: UICollectionViewDiffableDataSource<SectionItem, ListItem>!
@@ -140,11 +149,11 @@ final class DetailViewController: UICollectionViewController {
     var dataSourceSnapshot = NSDiffableDataSourceSnapshot<SectionItem, ListItem>()
 
     // Create collection view section based on number of sectionItem in modelObjects
-    dataSourceSnapshot.appendSections(modelObjects)
+    dataSourceSnapshot.appendSections(objects)
     dataSource.apply(dataSourceSnapshot)
 
     // Loop through each header item so that we can create a section snapshot for each respective header item.
-    for (index, sectionItem) in modelObjects.enumerated() {
+    for (index, sectionItem) in objects.enumerated() {
 
       // Create a section snapshot
       var sectionSnapshot = NSDiffableDataSourceSectionSnapshot<ListItem>()

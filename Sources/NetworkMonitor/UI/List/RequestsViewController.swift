@@ -18,6 +18,7 @@ final class RequestsViewController: UITableViewController {
     navigationItem.hidesSearchBarWhenScrolling = false
 
     tableView.register(RequestCell.self, forCellReuseIdentifier: RequestCell.reuseIdentifier)
+    tableView.register(LogRequestCell.self, forCellReuseIdentifier: LogRequestCell.reuseIdentifier)
 
     NotificationCenter.default.addObserver(forName: NSNotification.Name.NewRequestNotification, object: nil, queue: nil) { [weak self] (notification) in
       DispatchQueue.main.async { [weak self] in
@@ -96,10 +97,18 @@ extension RequestsViewController {
   }
 
   override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let cell = tableView.dequeueReusableCell(withIdentifier: RequestCell.reuseIdentifier, for: indexPath) as! RequestCell
-    cell.populate(request: filteredRequests[indexPath.item])
-    cell.accessoryType = .disclosureIndicator
-    return cell
+    let request = filteredRequests[indexPath.item]
+    if request.scheme == "debug" {
+      let cell = tableView.dequeueReusableCell(withIdentifier: LogRequestCell.reuseIdentifier, for: indexPath) as! LogRequestCell
+      cell.populate(request: request)
+      cell.accessoryType = .disclosureIndicator
+      return cell
+    } else {
+      let cell = tableView.dequeueReusableCell(withIdentifier: RequestCell.reuseIdentifier, for: indexPath) as! RequestCell
+      cell.populate(request: request)
+      cell.accessoryType = .disclosureIndicator
+      return cell
+    }
   }
 
   override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {

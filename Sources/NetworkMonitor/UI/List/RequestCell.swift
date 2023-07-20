@@ -25,7 +25,7 @@ final class RequestCell: UITableViewCell {
     methodLabel.font = .systemFont(ofSize: 12, weight: .semibold)
     codeLabel.font = .systemFont(ofSize: 14, weight: .bold)
     durationLabel.font = .systemFont(ofSize: 12)
-    dateLabel.font = .systemFont(ofSize: 14, weight: .semibold)
+    dateLabel.font = .systemFont(ofSize: 12, weight: .semibold)
     urlLabel.font = .systemFont(ofSize: 14, weight: .medium)
     requestWeight.font = .systemFont(ofSize: 12, weight: .medium)
     responseWeight.font = .systemFont(ofSize: 12, weight: .medium)
