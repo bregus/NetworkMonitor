@@ -26,7 +26,7 @@ struct BodyItem: Hashable {
 @available(iOS 14, *)
 final class DetailViewController: UICollectionViewController {
   var objects: [SectionItem] {
-    request.scheme == "debug" ? logModelObjects : modelObjects
+    request.scheme == LogLevel.analytic.rawValue ? logModelObjects : modelObjects
   }
 
   lazy var modelObjects = [
@@ -38,7 +38,7 @@ final class DetailViewController: UICollectionViewController {
   ]
 
   lazy var logModelObjects = [
-    SectionItem(icon: "eye.square", title: "Log", fields: [.field(FieldItem(title: "", subtitle: request.host ?? ""))]),
+    SectionItem(icon: "", title: "Log", fields: [.field(FieldItem(title: "", subtitle: request.host ?? ""))]),
     SectionItem(icon: "", title: "Events", fields: (request.requestHeaders).map { .field(FieldItem(title: $0.key, subtitle: String(describing: $0.value))) }),
     SectionItem(icon: "", title: "Parameters", fields: (request.responseBody?.dict ?? [:]).map { .field(FieldItem(title: $0.key, subtitle: String(describing: $0.value))) })
   ]
@@ -168,7 +168,7 @@ final class DetailViewController: UICollectionViewController {
       sectionSnapshot.append(symbolListItemArray, to: sectionListItem)
 
       // Expand this section by default
-      if index == 0 || request.scheme == "debug" { sectionSnapshot.expand([sectionListItem]) }
+      if index == 0 || request.scheme == LogLevel.analytic.rawValue { sectionSnapshot.expand([sectionListItem]) }
       // Apply section snapshot to the respective collection view section
       dataSource.apply(sectionSnapshot, to: sectionItem, animatingDifferences: false)
     }

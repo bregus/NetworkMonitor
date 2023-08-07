@@ -38,5 +38,5 @@ final class Storage: NSObject {
 }
 
 extension NSNotification.Name {
-  static let NewRequestNotification = NSNotification.Name(rawValue: "Name.NetShearsNewRequest")
+  static let NewRequestNotification = NSNotification.Name(rawValue: "Name.NetworkMonitorNewRequest")
 }

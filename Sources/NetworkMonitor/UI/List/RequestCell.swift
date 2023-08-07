@@ -63,7 +63,7 @@ final class RequestCell: UITableViewCell {
     codeIndicatorView.layer.cornerRadius = 6
     methodLabel.text = request.method?.uppercased()
     codeLabel.isHidden = request.code == nil ? true : false
-    codeLabel.text = request.code != nil ? String(request.code ?? 0) : "-"
+    codeLabel.text = request.isFinished ? (request.code != nil ? String(request.code ?? 0) : "-") : "IN PROGRESS"
     requestWeight.setIconAndText(icon: "arrow.up", text: request.requestBody?.weight ?? "0 KB")
     responseWeight.setIconAndText(icon: "arrow.down", text: request.responseBody?.weight ?? "0 KB")
     
@@ -84,8 +84,8 @@ final class RequestCell: UITableViewCell {
       codeIndicatorView.backgroundColor = color
       codeLabel.textColor = color
     } else {
-      codeIndicatorView.backgroundColor = .secondaryLabel
-      codeLabel.textColor = .secondaryLabel
+      codeIndicatorView.backgroundColor = request.isFinished ? .secondaryLabel : UIColor(rgb: 0xFAE017)
+      codeLabel.textColor = request.isFinished ? .secondaryLabel : UIColor(rgb: 0xFAE017)
     }
     urlLabel.text = request.url
     durationLabel.setIconAndText(icon: "clock", text: request.duration?.formattedMilliseconds() ?? "-")

@@ -98,7 +98,7 @@ extension RequestsViewController {
 
   override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let request = filteredRequests[indexPath.item]
-    if request.scheme == "debug" {
+    if request.scheme == LogLevel.analytic.rawValue {
       let cell = tableView.dequeueReusableCell(withIdentifier: LogRequestCell.reuseIdentifier, for: indexPath) as! LogRequestCell
       cell.populate(request: request)
       cell.accessoryType = .disclosureIndicator
