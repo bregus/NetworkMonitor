@@ -1,7 +1,7 @@
 import Foundation
 
 extension Double {
-  func formattedMilliseconds() -> String {
+  var formattedMilliseconds: String {
     let rounded = self
     if rounded < 1000 {
       return "\(Int(rounded))ms"

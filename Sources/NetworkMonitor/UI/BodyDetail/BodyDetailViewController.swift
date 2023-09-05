@@ -1,46 +1,21 @@
 import UIKit
 
-@available(iOS 13, *)
 final class BodyDetailViewController: UIViewController {
   private let textView: UITextView = UITextView()
-
-  private var searchController: UISearchController?
-  private var highlightedWords: [NSTextCheckingResult] = []
-  private var indexOfWord: Int = 0
-
+  
   private lazy var imageView: ImageScrollView = ImageScrollView(frame: view.bounds)
 
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = .systemBackground
     navigationItem.largeTitleDisplayMode = .never
-
     setupNavigationItems()
+    addTextView()
   }
 
   private func setupNavigationItems() {
     let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(shareContent))
     navigationItem.rightBarButtonItems = [shareButton]
-  }
-
-  @objc func showSearch() {
-    searchController?.isActive.toggle()
-  }
-
-  func addSearchController(){
-    searchController = UISearchController(searchResultsController: nil)
-    searchController?.searchResultsUpdater = self
-    searchController?.searchBar.returnKeyType = .done
-    searchController?.searchBar.delegate = self
-
-    searchController?.obscuresBackgroundDuringPresentation = false
-    searchController?.searchBar.placeholder = "Search"
-
-    navigationItem.searchController = searchController
-    definesPresentationContext = true
-
-    let searchButton = UIBarButtonItem(barButtonSystemItem: .search, target: self, action: #selector(showSearch))
-    navigationItem.rightBarButtonItems?.append(searchButton)
   }
 
   func addTextView() {
@@ -69,17 +44,16 @@ final class BodyDetailViewController: UIViewController {
 
   func setBody(_ body: Data) {
     if let image = UIImage(data: body) {
+      textView.removeFromSuperview()
       addImageView()
       imageView.setImage(image)
     } else {
-//      addSearchController()
-      addTextView()
       textView.text = body.prettyPrintedJSONString
-//      let json = try? JSONSerialization.jsonObject(with: body, options: .mutableContainers)
-//      let attr = NSMutableAttributedString()
-//      attr.append(json ?? String(data: body, encoding: .utf8))
-//      textView.attributedText = attr
     }
+  }
+
+  func setText(_ text: String) {
+    textView.text = text
   }
 
   @objc private func shareContent() {
@@ -93,24 +67,5 @@ final class BodyDetailViewController: UIViewController {
     }
     let activity = UIActivityViewController(activityItems: items, applicationActivities: nil)
     present(activity, animated: true)
-  }
-}
-
-@available(iOS 13, *)
-extension BodyDetailViewController: UISearchResultsUpdating {
-  func updateSearchResults(for searchController: UISearchController) {
-//    if searchController.searchBar.text?.isEmpty == false {
-//      performSearch(text: searchController.searchBar.text)
-//    }
-//    else {
-//      resetSearchText()
-//    }
-  }
-}
-
-@available(iOS 13, *)
-extension BodyDetailViewController: UISearchBarDelegate {
-  func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-    searchBar.resignFirstResponder()
   }
 }

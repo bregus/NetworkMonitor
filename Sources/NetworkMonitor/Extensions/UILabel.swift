@@ -12,7 +12,7 @@ extension UILabel {
     let imageAttachment = NSTextAttachment()
     imageAttachment.image = UIImage(systemName: icon)?.withRenderingMode(.alwaysTemplate)
     let imageOffsetY: CGFloat = -2.0
-    imageAttachment.bounds = CGRect(x: 10, y: imageOffsetY, width: font.pointSize, height: font.pointSize)
+    imageAttachment.bounds = CGRect(x: 0, y: imageOffsetY, width: font.pointSize, height: font.pointSize)
     let attachmentString = NSAttributedString(attachment: imageAttachment)
     let completeText = NSMutableAttributedString(string: "")
     completeText.append(attachmentString)

@@ -1,10 +1,6 @@
 import Foundation
 import UIKit
 
-public enum LogLevel: String {
-  case analytic
-}
-
 public struct NetworkMonitor {
   public static let shared = NetworkMonitor()
 
@@ -22,16 +18,17 @@ public struct NetworkMonitor {
     topController.present(RequestsViewController().embended, animated: true)
   }
 
-  public func custom(url: URL?, data: Data? = nil, parameters: [String: String] = [:]) {
-    guard let url else { return }
-    var request = RequestRepresentable(request: CustomRequest(url: url, body: data, parameters: parameters))
-    request.isFinished = true
-    Storage.shared.saveRequest(request: request)
-  }
-
-  public func log(level: LogLevel, message: String, parameters: [String: String] = [:], metadata: Data = Data()) {
-    guard let url = URL(string: level.rawValue + "://" + message) else { return }
-    let request = RequestRepresentable(request: CustomRequest(url: url, body: metadata, parameters: parameters))
-    Storage.shared.saveRequest(request: request)
+  public func log(
+    level: LogLevel,
+    label: String,
+    parameters: [String: String] = [:],
+    metadata: Data = Data(),
+    file: String = #fileID,
+    method: String = #function,
+    line: UInt = #line
+  ) {
+    let fileDetails = ["File name": file.description + UInt(line).description, "Function": method]
+    let log = LogMessage(level: level, label: label, parameters: parameters.merging(fileDetails, uniquingKeysWith: { $1 }), metadata: metadata)
+    Storage.shared.saveRequest(request: RequestModel(log: log))
   }
 }

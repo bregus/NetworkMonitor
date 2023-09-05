@@ -56,39 +56,27 @@ final class RequestCell: UITableViewCell {
     fatalError("init(coder:) has not been implemented")
   }
 
-  func populate(request: RequestRepresentable?){
+  func populate(request: RequestModel?){
     guard let request else {
       return
     }
+    let status = StatusModel(request: request)
     codeIndicatorView.layer.cornerRadius = 6
     methodLabel.text = request.method?.uppercased()
-    codeLabel.isHidden = request.code == nil ? true : false
-    codeLabel.text = request.isFinished ? (request.code != nil ? String(request.code ?? 0) : "-") : "IN PROGRESS"
-    requestWeight.setIconAndText(icon: "arrow.up", text: request.requestBody?.weight ?? "0 KB")
-    responseWeight.setIconAndText(icon: "arrow.down", text: request.responseBody?.weight ?? "0 KB")
-    
-    if let code = request.code {
-      var color: UIColor
-      switch code {
-      case 200..<300:
-        color = .systemGreen
-      case 300..<400:
-        color = .systemYellow
-      case 400..<500:
-        color = .systemRed
-      case 500..<600:
-        color = .systemRed
-      default:
-        color = .systemGray
-      }
-      codeIndicatorView.backgroundColor = color
-      codeLabel.textColor = color
-    } else {
-      codeIndicatorView.backgroundColor = request.isFinished ? .secondaryLabel : UIColor(rgb: 0xFAE017)
-      codeLabel.textColor = request.isFinished ? .secondaryLabel : UIColor(rgb: 0xFAE017)
-    }
+
+    codeIndicatorView.backgroundColor = status.tint
+    codeLabel.textColor = status.tint
+    codeLabel.text = status.title
+
     urlLabel.text = request.url
-    durationLabel.setIconAndText(icon: "clock", text: request.duration?.formattedMilliseconds() ?? "-")
+    durationLabel.setIconAndText(icon: "clock", text: request.duration.formattedMilliseconds)
+    requestWeight.setIconAndText(icon: "arrow.up", text: request.requestBody?.weight ?? "0 B")
+    responseWeight.setIconAndText(icon: "arrow.down", text: request.responseBody?.weight ?? "0 B")
+
+    durationLabel.isHidden = request.state == .pending
+    requestWeight.isHidden = request.state == .pending
+    responseWeight.isHidden = request.state == .pending
+
     dateLabel.text = request.date.stringWithFormat(dateFormat: "HH:mm:ss")
   }
 }

@@ -1,12 +1,27 @@
 import Foundation
 import UserNotifications
 
+@propertyWrapper
+struct Atomic<Value> {
+  private let queue = DispatchQueue(label: "com.bregus.networkMonitor")
+  private var value: Value
+
+  init(wrappedValue: Value) {
+    self.value = wrappedValue
+  }
+
+  var wrappedValue: Value {
+    get { return queue.sync { value } }
+    set { queue.sync { value = newValue } }
+  }
+}
+
 final class Storage: NSObject {
   static let shared: Storage = Storage()
 
-  private(set) var requests: [RequestRepresentable] = []
+  @Atomic private(set) var requests: [RequestModel] = []
 
-  func saveRequest(request: RequestRepresentable?) {
+  func saveRequest(request: RequestModel?) {
     guard let request else { return }
 
     if let index = requests.firstIndex(where: { request.id == $0.id }) {
