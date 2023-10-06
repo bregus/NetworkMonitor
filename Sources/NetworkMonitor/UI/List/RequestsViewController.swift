@@ -1,11 +1,8 @@
 import UIKit
 
-@available(iOS 14.0, *)
 final class RequestsViewController: UITableViewController {
-  var searchController = UISearchController(searchResultsController: nil)
-
-  private let requestCellIdentifier = String(describing: RequestCell.self)
-  @Atomic private var filteredRequests: [RequestModel] = Storage.shared.requests
+  private var searchController = UISearchController(searchResultsController: nil)
+  @Atomic private var filteredRequests: [RequestModel] = FilterType.allCases.first?.filter() ?? []
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -17,8 +14,8 @@ final class RequestsViewController: UITableViewController {
     navigationItem.largeTitleDisplayMode = .never
     navigationItem.hidesSearchBarWhenScrolling = false
 
-    tableView.register(RequestCell.self, forCellReuseIdentifier: RequestCell.reuseIdentifier)
-    tableView.register(LogRequestCell.self, forCellReuseIdentifier: LogRequestCell.reuseIdentifier)
+    tableView.registerCell(RequestCell.self)
+    tableView.registerCell(LogRequestCell.self)
 
     NotificationCenter.default.addObserver(forName: NSNotification.Name.NewRequestNotification, object: nil, queue: nil) { [weak self] (notification) in
       DispatchQueue.main.async { [weak self] in
@@ -31,11 +28,7 @@ final class RequestsViewController: UITableViewController {
   }
 
   private func updateSegments() {
-    var segments = [String]()
-    segments.append("All(\(filteredRequests.count))")
-    segments.append("Network(\(filteredRequests.filter{ $0.method != LogLevel.method}.count))")
-    segments.append("Log(\(filteredRequests.filter{ $0.method == LogLevel.method}.count))")
-    searchController.searchBar.scopeButtonTitles = segments
+    searchController.searchBar.scopeButtonTitles = FilterType.allCases.map { "\($0.rawValue.capitalized)(\($0.filter().count))" }
   }
 
   //  MARK: - Search
@@ -59,23 +52,14 @@ final class RequestsViewController: UITableViewController {
       .filter {
         $0.url.range(of: searchText, options: .caseInsensitive) != nil
         || $0.method?.range(of: searchText, options: .caseInsensitive) != nil
+        || $0.scheme?.range(of: searchText, options: .caseInsensitive) != nil
         || $0.host?.range(of: searchText, options: .caseInsensitive) != nil
         || ($0.code == Int(searchText) && $0.code != -1)
       }
   }
 
   private func filterCategory() -> [RequestModel] {
-    Storage.shared.requests
-      .filter {
-        switch searchController.searchBar.selectedScopeButtonIndex {
-        case 1:
-          return $0.method != LogLevel.method
-        case 2:
-          return $0.method == LogLevel.method
-        default:
-          return true
-        }
-      }
+    FilterType.allCases[searchController.searchBar.selectedScopeButtonIndex].filter()
   }
 
   private func addKeyboardToolbar() {
@@ -118,7 +102,7 @@ final class RequestsViewController: UITableViewController {
   }
 }
 
-@available(iOS 14.0, *)
+
 extension RequestsViewController {
   override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
     filteredRequests.count
@@ -127,12 +111,12 @@ extension RequestsViewController {
   override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let request = filteredRequests[indexPath.item]
     if request.method == LogLevel.method {
-      let cell = tableView.dequeueReusableCell(withIdentifier: LogRequestCell.reuseIdentifier, for: indexPath) as! LogRequestCell
+      let cell = tableView.dequeueCell(LogRequestCell.self, for: indexPath)
       cell.populate(request: request)
       cell.accessoryType = .disclosureIndicator
       return cell
     } else {
-      let cell = tableView.dequeueReusableCell(withIdentifier: RequestCell.reuseIdentifier, for: indexPath) as! RequestCell
+      let cell = tableView.dequeueCell(RequestCell.self, for: indexPath)
       cell.populate(request: request)
       cell.accessoryType = .disclosureIndicator
       return cell
@@ -142,13 +126,9 @@ extension RequestsViewController {
   override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
     UITableView.automaticDimension
   }
-
-  override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
-    60
-  }
 }
 
-@available(iOS 14.0, *)
+
 extension RequestsViewController {
   override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     openRequestDetailVC(request: filteredRequests[indexPath.item])
@@ -157,7 +137,7 @@ extension RequestsViewController {
 }
 
 // MARK: - UISearchResultsUpdating Delegate
-@available(iOS 14.0, *)
+
 extension RequestsViewController: UISearchResultsUpdating {
   func updateSearchResults(for searchController: UISearchController) {
     filteredRequests = filterRequests()
@@ -165,7 +145,7 @@ extension RequestsViewController: UISearchResultsUpdating {
   }
 }
 
-@available(iOS 14.0, *)
+
 extension RequestsViewController: UISearchBarDelegate {
   func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
     filteredRequests = filterRequests()

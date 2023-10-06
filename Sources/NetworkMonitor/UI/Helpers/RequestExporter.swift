@@ -4,7 +4,7 @@ final class RequestExporter {
   static func txtExport(request: RequestModel) -> String{
     var txt: String = ""
     txt.append("*** Overview *** \n\n")
-    txt.append(overview(request: request) + "\n\n")
+    txt.append(overview(request: request))
     txt.append("*** Request Header *** \n")
     txt.append(header(request.requestHeaders) + "\n\n")
     txt.append("*** Request Body *** \n")

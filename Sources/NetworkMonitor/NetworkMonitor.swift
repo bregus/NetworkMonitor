@@ -12,7 +12,6 @@ public struct NetworkMonitor {
     URLProtocol.unregisterClass(NetwrokListenerUrlProtocol.self)
   }
 
-  @available(iOS 14, *)
   public func presentNetworkMonitor() {
     guard let topController = UIViewController.currentViewController(), !(topController is RequestsViewController) else { return }
     topController.present(RequestsViewController().embended, animated: true)

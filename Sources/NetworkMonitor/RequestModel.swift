@@ -1,6 +1,8 @@
 import Foundation
 
 public enum LogLevel {
+  static let method: String = "log"
+
   case analytic(message: String)
   case debug(message: String)
   case custom(URL?)
@@ -15,8 +17,6 @@ public enum LogLevel {
       return "custom"
     }
   }
-
-  static let method: String = "log"
 }
 
 struct LogMessage {
@@ -29,7 +29,7 @@ struct LogMessage {
   var url: String {
     switch level {
     case .analytic(let message), .debug(let message):
-      return "\(level.title)://\(label)/\(message)"
+      return message
     case .custom(let url):
       return url?.absoluteString ?? level.title
     }

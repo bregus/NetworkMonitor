@@ -1,83 +1,7 @@
 import UIKit
 import SPIndicator
 
-enum Section: Hashable {
-  case overview([OverviewItem]), group(SectionItem, BodyItem)
-}
-
-enum ListItem: Hashable {
-  case overview(OverviewItem)
-  case header(SectionItem)
-  case field(FieldItem)
-  case body(BodyItem)
-}
-
-struct SectionItem: Hashable {
-  var icon: String = ""
-  let title: String
-  let fields: [FieldItem]
-}
-
-struct OverviewItem: Hashable {
-  var icon: String = ""
-  let title: String
-  var color: UIColor = .label
-  var subtitle: String = ""
-  let disclousure: Bool
-  var inline: Bool = true
-}
-
-struct FieldItem: Hashable {
-  let title: String
-  let subtitle: String
-}
-
-struct BodyItem: Hashable {
-  var icon: String = ""
-  var title: String
-  let body: Data?
-}
-
-@available(iOS 14, *)
 final class DetailViewController: UICollectionViewController {
-  private lazy var sections: [Section] = {
-    request.method == LogLevel.method ? logSections : requestSections
-  }()
-
-  private lazy var requestSections: [Section] = [
-    .overview(overview),
-    .group(
-      SectionItem(icon: "list.bullet.rectangle", title: "Request headers", fields: request.requestHeaders.map { FieldItem(title: $0.key, subtitle: $0.value) }),
-      BodyItem(icon: "arrow.up.circle.fill", title: "Request body", body: request.requestBody)),
-    .group(
-      SectionItem(icon: "list.bullet.rectangle", title: "Response headers", fields: request.responseHeaders.map { FieldItem(title: $0.key, subtitle: $0.value) }),
-      BodyItem(icon: "arrow.down.circle.fill", title: "Response body", body: request.responseBody)
-    )
-  ]
-
-  private lazy var logSections: [Section] = [
-    .overview([OverviewItem(title: request.scheme?.uppercased() ?? "", subtitle: request.path ?? request.url, disclousure: false, inline: false)]),
-    .group(
-      SectionItem(icon: "list.bullet.rectangle", title: "Parameters", fields: request.responseHeaders.map { FieldItem(title: $0.key,subtitle: $0.value) }),
-      BodyItem(icon: "cylinder.split.1x2", title: "Metadata", body: request.responseBody)
-    )
-  ]
-
-  private var overview: [OverviewItem] {
-    var items = [OverviewItem]()
-    let status = StatusModel(request: request)
-    items.append(OverviewItem(icon: status.systemImage, title: status.title, color: status.tint, subtitle: request.duration.formattedMilliseconds.description, disclousure: false))
-    items.append(OverviewItem(title: (request.method ?? "") + " " + request.url, disclousure: true))
-    if let error = request.errorClientDescription {
-      items.append(OverviewItem(title: "Error: \(error.localizedDescription.capitalized)", disclousure: true))
-    }
-    return items
-  }
-
-  private var dataSource: UICollectionViewDiffableDataSource<Section, ListItem>!
-  private var request: RequestModel
-
-  // MARK: Cell registration
   let overViewCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, OverviewItem> {
     (cell, indexPath, sectionItem) in
     var content = cell.defaultContentConfiguration()
@@ -90,20 +14,18 @@ final class DetailViewController: UICollectionViewController {
     content.secondaryTextProperties.font = .systemFont(ofSize: 14, weight: .regular)
     content.prefersSideBySideTextAndSecondaryText = sectionItem.inline
     cell.contentConfiguration = content
-    if sectionItem.disclousure {
+    if sectionItem.disclosure {
       cell.accessories = [.disclosureIndicator()]
     }
   }
 
   let headerCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, SectionItem> {
     (cell, indexPath, sectionItem) in
-    var content = cell.defaultContentConfiguration()
+    var content = UIListContentConfiguration.valueCell()
     content.text = sectionItem.title
     content.textProperties.font = .systemFont(ofSize: 16, weight: .medium)
     content.image = UIImage(systemName: sectionItem.icon)
     content.secondaryText = sectionItem.fields.count.description
-    content.secondaryTextProperties.font = .systemFont(ofSize: 16, weight: .medium)
-    content.prefersSideBySideTextAndSecondaryText = true
     cell.contentConfiguration = content
 
     if !sectionItem.fields.isEmpty {
@@ -127,18 +49,99 @@ final class DetailViewController: UICollectionViewController {
   let bodyCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, BodyItem> {
     (cell, indexPath, body) in
 
-    var content = cell.defaultContentConfiguration()
+    var content = UIListContentConfiguration.valueCell()
     content.text = body.title
     content.textProperties.font = .systemFont(ofSize: 16, weight: .medium)
     content.image = UIImage(systemName: body.icon)
-    content.secondaryTextProperties.font = .systemFont(ofSize: 16, weight: .semibold)
     content.secondaryText = body.body?.weight ?? "0 bytes"
-    content.prefersSideBySideTextAndSecondaryText = true
     cell.contentConfiguration = content
     if let body = body.body, !body.isEmpty {
       cell.accessories = [.disclosureIndicator(options: .init(tintColor: .systemBlue))]
     }
   }
+
+
+  private lazy var sections: [Section] = {
+    request.method == LogLevel.method ? logSections : requestSections
+  }()
+
+  private lazy var requestSections: [Section] = [
+    .overview(overview),
+    .group([
+      .header(SectionItem(
+        icon: "list.bullet.rectangle",
+        title: "Request headers",
+        fields: request.requestHeaders.map { FieldItem(title: $0.key, subtitle: $0.value) }
+      )),
+      .body(BodyItem(
+        icon: "arrow.up.circle.fill",
+        title: "Request body",
+        body: request.requestBody)
+      )
+    ]),
+    .group([
+      .header(SectionItem(
+        icon: "list.bullet.rectangle",
+        title: "Response headers",
+        fields: request.responseHeaders.map { FieldItem(title: $0.key, subtitle: $0.value) }
+      )),
+      .body(BodyItem(
+        icon: "arrow.down.circle.fill",
+        title: "Response body",
+        body: request.responseBody)
+      )
+    ])
+  ]
+
+  private lazy var logSections: [Section] = [
+    .overview([OverviewItem(
+      title: request.scheme?.uppercased() ?? "",
+      subtitle: request.path ?? request.url,
+      disclosure: false, inline: false)
+    ]),
+    .group([
+      .header(SectionItem(
+        icon: "list.bullet.rectangle",
+        title: "Parameters",
+        fields: request.responseHeaders.map { FieldItem(title: $0.key,subtitle: $0.value) }
+      )),
+      .body(BodyItem(
+        icon: "cylinder.split.1x2",
+        title: "Metadata",
+        body: request.responseBody
+      ))
+    ])
+  ]
+
+  private var overview: [OverviewItem] {
+    var items = [OverviewItem]()
+    let status = StatusModel(request: request)
+    items.append(OverviewItem(icon: status.systemImage, title: status.title, color: status.tint, subtitle: request.duration.formattedMilliseconds.description, disclosure: false))
+    items.append(OverviewItem(title: (request.method ?? "") + " " + request.url, disclosure: true))
+    if let error = request.errorClientDescription {
+      items.append(OverviewItem(title: "Error: \(error.localizedDescription.capitalized)", disclosure: true))
+    }
+    return items
+  }
+
+  private lazy var dataSource = UICollectionViewDiffableDataSource<Section, ListItem>(collectionView: collectionView) {
+    (collectionView, indexPath, listItem) -> UICollectionViewCell? in
+    switch listItem {
+    case .overview(let overview):
+      return collectionView.dequeueConfiguredReusableCell(using: self.overViewCellRegistration, for: indexPath, item: overview)
+
+    case .header(let sectionItem):
+      return collectionView.dequeueConfiguredReusableCell(using: self.headerCellRegistration, for: indexPath, item: sectionItem)
+
+    case .field(let symbolItem):
+      return collectionView.dequeueConfiguredReusableCell(using: self.fieldCellConfiguration, for: indexPath, item: symbolItem)
+
+    case .body(let bodyItem):
+      return collectionView.dequeueConfiguredReusableCell(using: self.bodyCellRegistration, for: indexPath, item: bodyItem)
+    }
+  }
+
+  private let request: RequestModel
 
   init(request: RequestModel) {
     let layoutConfig = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
@@ -155,7 +158,6 @@ final class DetailViewController: UICollectionViewController {
     super.viewDidLoad()
     title = request.path
     setupNavigationItems()
-    createDataSource()
     createSnapshot()
   }
 
@@ -182,40 +184,22 @@ final class DetailViewController: UICollectionViewController {
       switch sectionItem {
       case .overview(let item):
         sectionSnapshot.append(item.map { ListItem.overview($0)})
-      case .group(let list, let body):
-        let sectionListItem = ListItem.header(list)
-        sectionSnapshot.append([sectionListItem])
-        let symbolListItemArray = list.fields.map { ListItem.field($0) }
-        sectionSnapshot.append(symbolListItemArray, to: sectionListItem)
-        sectionSnapshot.append([.body(body)])
-        if request.method == LogLevel.method {
-          sectionSnapshot.expand([sectionListItem])
+      case .group(let items):
+        sectionSnapshot.append(items)
+        items.forEach { item in
+          guard case .header(let fields) = item else { return }
+          sectionSnapshot.append(fields.fields.map(ListItem.field), to: item)
+          if request.method == LogLevel.method {
+            sectionSnapshot.expand([item])
+          }
         }
       }
       dataSource.apply(sectionSnapshot, to: sectionItem, animatingDifferences: false)
     }
   }
-
-  // MARK: Initialize data source
-  private func createDataSource() {
-    dataSource = UICollectionViewDiffableDataSource<Section, ListItem>(collectionView: collectionView) {
-      (collectionView, indexPath, listItem) -> UICollectionViewCell? in
-      switch listItem {
-      case .overview(let overview):
-        return collectionView.dequeueConfiguredReusableCell(using: self.overViewCellRegistration, for: indexPath, item: overview)
-      case .header(let sectionItem):
-        return collectionView.dequeueConfiguredReusableCell(using: self.headerCellRegistration, for: indexPath, item: sectionItem)
-      case .field(let symbolItem):
-        return collectionView.dequeueConfiguredReusableCell(using: self.fieldCellConfiguration, for: indexPath, item: symbolItem)
-      case .body(let bodyItem):
-        return collectionView.dequeueConfiguredReusableCell(using: self.bodyCellRegistration, for: indexPath, item: bodyItem)
-      }
-    }
-  }
 }
 
 // MARK: - UICollectionViewDelegate
-@available(iOS 14, *)
 extension DetailViewController {
   override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
     collectionView.deselectItem(at: indexPath, animated: true)
@@ -228,13 +212,13 @@ extension DetailViewController {
       UIPasteboard.general.string = fieldItem.subtitle
     }
 
-    if case .body(let bodyItem) = cell, let body = bodyItem.body {
+    if case .body(let bodyItem) = cell, let body = bodyItem.body, !body.isEmpty {
       let vc = BodyDetailViewController()
       vc.setBody(body)
       navigationController?.pushViewController(vc, animated: true)
     }
 
-    if case .overview = cell {
+    if case .overview(let item) = cell, item.disclosure {
       let vc = BodyDetailViewController()
       vc.setText(RequestExporter.txtExport(request: request))
       navigationController?.pushViewController(vc, animated: true)

@@ -16,6 +16,24 @@ struct Atomic<Value> {
   }
 }
 
+enum FilterType: String, CaseIterable {
+  typealias Filter = () -> [RequestModel]
+  case network
+  case log
+  case all
+
+  var filter: Filter {
+    switch self {
+    case .network:
+      return { Storage.shared.requests.filter{ $0.method != LogLevel.method } }
+    case .log:
+      return { Storage.shared.requests.filter{ $0.method == LogLevel.method } }
+    case .all:
+      return { Storage.shared.requests }
+    }
+  }
+}
+
 final class Storage: NSObject {
   static let shared: Storage = Storage()
 

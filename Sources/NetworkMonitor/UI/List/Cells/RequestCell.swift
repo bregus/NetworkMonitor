@@ -16,8 +16,8 @@ final class RequestCell: UITableViewCell {
 
     let hstack = UIStackView(arrangedSubviews: [codeIndicatorView, codeLabel, UIView(), dateLabel])
     hstack.spacing = 4
-    let hstack2 = UIStackView(arrangedSubviews: [methodLabel, UIView(), requestWeight, responseWeight, durationLabel])
-    hstack2.spacing = 8
+    let hstack2 = UIStackView(arrangedSubviews: [methodLabel, requestWeight, responseWeight, durationLabel, UIView()])
+    hstack2.spacing = 32
     let vstack = UIStackView(arrangedSubviews: [hstack, urlLabel, hstack2])
     vstack.spacing = 8
     vstack.axis = .vertical
@@ -56,10 +56,7 @@ final class RequestCell: UITableViewCell {
     fatalError("init(coder:) has not been implemented")
   }
 
-  func populate(request: RequestModel?){
-    guard let request else {
-      return
-    }
+  func populate(request: RequestModel){
     let status = StatusModel(request: request)
     codeIndicatorView.layer.cornerRadius = 6
     methodLabel.text = request.method?.uppercased()
