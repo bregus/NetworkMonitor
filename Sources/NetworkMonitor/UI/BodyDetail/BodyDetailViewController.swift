@@ -32,6 +32,10 @@ final class BodyDetailViewController: UIViewController {
     textView.attributedText = text
   }
 
+  func setText(_ text: String) {
+    textView.text = text
+  }
+
   private func setupNavigationItems() {
     let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(shareContent))
     navigationItem.rightBarButtonItems = [shareButton]

@@ -97,7 +97,7 @@ final class DetailViewController: UICollectionViewController {
     .overview([OverviewItem(
       title: request.scheme?.uppercased() ?? "",
       subtitle: request.path ?? request.url,
-      disclosure: false, inline: false)
+      disclosure: false, inline: false, type: .status)
     ]),
     .group([
       .header(SectionItem(
@@ -116,11 +116,12 @@ final class DetailViewController: UICollectionViewController {
   private var overview: [OverviewItem] {
     var items = [OverviewItem]()
     let status = StatusModel(request: request)
-    items.append(OverviewItem(icon: status.systemImage, title: status.title, color: status.tint, subtitle: request.duration.formattedMilliseconds.description, disclosure: false))
-    items.append(OverviewItem(title: (request.method ?? "") + " " + request.url, disclosure: true))
-    if let error = request.errorClientDescription {
-      items.append(OverviewItem(title: "Error: \(error.localizedDescription.capitalized)", disclosure: true))
+    items.append(OverviewItem(icon: status.systemImage, title: status.title, color: status.tint, subtitle: request.duration.formattedMilliseconds.description, disclosure: false, type: .status))
+    items.append(OverviewItem(title: (request.method ?? "") + " " + request.url, disclosure: true, type: .url))
+    if let error = request.error {
+      items.append(OverviewItem(title: "Error: \(error.localizedDescription.capitalized)", disclosure: true, type: .error))
     }
+    items.append(OverviewItem(title: "Metrics", disclosure: true, type: .metrics))
     return items
   }
 
@@ -146,7 +147,6 @@ final class DetailViewController: UICollectionViewController {
   init(request: RequestModel) {
     let layoutConfig = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
     let listLayout = UICollectionViewCompositionalLayout.list(using: layoutConfig)
-    print(request.metrics?.transactionMetrics)
     self.request = request
     super.init(collectionViewLayout: listLayout)
   }
@@ -220,7 +220,12 @@ extension DetailViewController {
 
     if case .overview(let item) = cell, item.disclosure {
       let vc = BodyDetailViewController()
-      vc.setText(RequestExporter.txtExport(request: request))
+      switch item.type {
+      case .url: vc.setText(RequestExporter.txtExport(request: request))
+      case .error: vc.setText(request.error.debugDescription)
+      case .metrics: vc.setText(String(describing: request.metrics!.transactionMetrics))
+      default: break
+      }
       navigationController?.pushViewController(vc, animated: true)
     }
   }

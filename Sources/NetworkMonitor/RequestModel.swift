@@ -56,7 +56,7 @@ struct RequestModel {
   let date: Date
 
   var duration: Double = 0
-  var errorClientDescription: Error? {
+  var error: Error? {
     didSet { state = .failure }
   }
   var state: State = .pending
@@ -89,7 +89,7 @@ struct RequestModel {
   }
 
   init(request: NSURLRequest, session: URLSession?) {
-    id = UUID().uuidString
+    id = request.hash.description
     url = request.url?.absoluteString ?? ""
     host = request.url?.host
     port = request.url?.port

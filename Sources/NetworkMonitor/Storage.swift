@@ -52,6 +52,11 @@ final class Storage: NSObject {
     NotificationCenter.default.post(name: NSNotification.Name.NewRequestNotification, object: nil)
   }
 
+  func updateRequestError(id: String, error: Error) {
+    guard let index = requests.firstIndex(where: { id == $0.id }) else { return }
+    requests[index].error = error
+  }
+
   func clearRequests() {
     requests.removeAll()
     NotificationCenter.default.post(name: NSNotification.Name.NewRequestNotification, object: nil)

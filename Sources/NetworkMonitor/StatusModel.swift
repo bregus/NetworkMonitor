@@ -48,9 +48,9 @@ enum StatusCodeFormatter {
   }
 }
 
-fileprivate enum ErrorFormatter {
+enum ErrorFormatter {
   static func shortErrorDescription(for request: RequestModel) -> String {
-    if let errorCode = (request.errorClientDescription as? URLError)?.errorCode {
+    if let errorCode = (request.error as? URLError)?.errorCode {
       return descriptionForURLErrorCode(errorCode)
     } else {
       return StatusCodeFormatter.string(for: request.code)

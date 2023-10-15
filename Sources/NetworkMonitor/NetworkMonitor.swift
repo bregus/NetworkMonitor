@@ -30,4 +30,8 @@ public struct NetworkMonitor {
     let log = LogMessage(level: level, label: label, parameters: parameters.merging(fileDetails, uniquingKeysWith: { $1 }), metadata: metadata)
     Storage.shared.saveRequest(request: RequestModel(log: log))
   }
+
+  public func logDecodeError(for urlRequest: URLRequest, error: Error) {
+    Storage.shared.updateRequestError(id: (urlRequest as NSURLRequest).hash.description, error: error)
+  }
 }

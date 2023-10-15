@@ -25,12 +25,17 @@ struct SectionItem: Hashable {
 }
 
 struct OverviewItem: Hashable {
+  enum ItemType {
+    case status, url, error, metrics
+  }
+
   var icon: String = ""
   let title: String
   var color: UIColor = .label
   var subtitle: String = ""
   let disclosure: Bool
   var inline: Bool = true
+  var type: ItemType
 }
 
 struct FieldItem: Hashable {

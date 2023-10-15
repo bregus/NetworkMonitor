@@ -42,7 +42,7 @@ public final class NetwrokListenerUrlProtocol: URLProtocol {
     sessionTask?.cancel()
     currentRequest?.requestBody = body(from: request)
     if let startDate = currentRequest?.date{
-      currentRequest?.duration = fabs(startDate.timeIntervalSinceNow) * 1000 //Find elapsed time and convert to milliseconds
+      currentRequest?.duration = fabs(startDate.timeIntervalSinceNow) * 1000
     }
 
     saveRequest()
@@ -85,7 +85,7 @@ extension NetwrokListenerUrlProtocol: URLSessionDataDelegate {
 
   public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
     if let error = error {
-      currentRequest?.errorClientDescription = error
+      currentRequest?.error = error
       saveRequest()
       client?.urlProtocol(self, didFailWithError: error)
     } else {
@@ -100,7 +100,7 @@ extension NetwrokListenerUrlProtocol: URLSessionDataDelegate {
 
   public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
     guard let error = error else { return }
-    currentRequest?.errorClientDescription = error
+    currentRequest?.error = error
     saveRequest()
     client?.urlProtocol(self, didFailWithError: error)
   }

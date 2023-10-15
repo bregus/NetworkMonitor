@@ -52,7 +52,11 @@ final class RequestExporter {
     overview["Date"] = request.date.stringWithFormat(dateFormat: "HH:mm:ss")
     overview["URL"] = request.url
     if let method =  request.method { overview["Method"] = method }
-    if request.code != -1 { overview["Response code"] = StatusCodeFormatter.string(for: request.code) }
+    if request.code != -1 {
+      overview["Response code"] = StatusCodeFormatter.string(for: request.code)
+    } else {
+      overview["Error"] = ErrorFormatter.shortErrorDescription(for: request)
+    }
     if request.duration != 0 { overview["Duration"] = request.duration.formattedMilliseconds }
 
     return overview
