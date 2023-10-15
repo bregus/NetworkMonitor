@@ -146,6 +146,7 @@ final class DetailViewController: UICollectionViewController {
   init(request: RequestModel) {
     let layoutConfig = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
     let listLayout = UICollectionViewCompositionalLayout.list(using: layoutConfig)
+    print(request.metrics?.transactionMetrics)
     self.request = request
     super.init(collectionViewLayout: listLayout)
   }
@@ -162,14 +163,13 @@ final class DetailViewController: UICollectionViewController {
   }
 
   private func setupNavigationItems() {
-    let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(shareContent))
-    navigationItem.rightBarButtonItems = [shareButton]
-  }
-
-  @objc private func shareContent() {
-    let item = RequestExporter.txtExport(request: request)
-    let activity = UIActivityViewController(activityItems: [item], applicationActivities: nil)
-    present(activity, animated: true)
+    guard request.method != LogLevel.method else { return }
+    let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: nil)
+    navigationItem.rightBarButtonItem = shareButton
+    shareButton.menu = ExportMenuBuilder()
+      .append(title: "Text", export: RequestExporter.txtExport(request: request))
+      .append(title: "Curl", export: RequestExporter.curlExport(request: request))
+      .build()
   }
 
   // MARK: - Setup snapshots

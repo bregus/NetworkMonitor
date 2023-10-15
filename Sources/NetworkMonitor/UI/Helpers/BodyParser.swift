@@ -7,7 +7,7 @@ let kJSONSymbolColor = UIColor.label
 
 let kJSONNullValueColor = UIColor(rgb: 0xFF7AB2)
 let kJSONBoolValueColor = UIColor(rgb: 0xFF7AB2)
-let kJSONNumberValueColor = UIColor(rgb: 0xD9C97C)
+let kJSONNumberValueColor = UITraitCollection.current.userInterfaceStyle == .dark ? UIColor(rgb: 0xD9C97C) : UIColor(rgb: 0xAD3DA4)
 let kJSONStringValueColor = UIColor(rgb: 0xff8170)
 
 extension NSAttributedString {
@@ -22,7 +22,7 @@ extension NSAttributedString {
 }
 
 extension NSAttributedString {
-  class public func render(_ element: Any?) -> NSAttributedString {
+  static func render(_ element: Any?) -> NSAttributedString {
     return render(element: element, level: 0, ext: 0)
   }
 
@@ -71,7 +71,7 @@ extension NSAttributedString {
 
       let para = NSMutableParagraphStyle()
       para.firstLineHeadIndent = CGFloat((level + 1) * 10)
-      para.headIndent = CGFloat(level * 10) + width + ext + 5
+//      para.headIndent = CGFloat(level * 10) + width + ext + 5
       para.lineBreakMode = .byCharWrapping
 
       mattr.append(NSAttributedString.init(string: key, color: kJSONKeyColor, style: para))
@@ -145,5 +145,22 @@ extension NSNumber {
     } else {
       return false
     }
+  }
+}
+
+extension String {
+  func header() -> NSAttributedString {
+    let attrs: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 14), .foregroundColor: UIColor.secondaryLabel]
+    return NSAttributedString(string: self, attributes: attrs)
+  }
+
+  func key() -> NSAttributedString {
+    let attrs: [NSAttributedString.Key: Any] = [.font: UIFont.boldSystemFont(ofSize: 14), .foregroundColor: kJSONStringValueColor]
+    return NSAttributedString(string: self, attributes: attrs)
+  }
+
+  func value() -> NSAttributedString {
+    let attrs: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 13), .foregroundColor: UIColor.label]
+    return NSAttributedString(string: self, attributes: attrs)
   }
 }

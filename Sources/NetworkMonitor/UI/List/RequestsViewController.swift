@@ -1,10 +1,10 @@
 import UIKit
 
-final class RequestsViewController: UITableViewController {
+final public class RequestsViewController: UITableViewController {
   private var searchController = UISearchController(searchResultsController: nil)
   @Atomic private var filteredRequests: [RequestModel] = FilterType.allCases.first?.filter() ?? []
 
-  override func viewDidLoad() {
+  public override func viewDidLoad() {
     super.viewDidLoad()
     title = "Monitor"
 
@@ -86,7 +86,13 @@ final class RequestsViewController: UITableViewController {
     let clearAction: UIAction = UIAction(title: "Clear", image: UIImage(systemName: "eraser.fill"), attributes: .destructive) { _ in
       self.clearRequests()
     }
-    let menu = UIMenu(title: "", children: [clearAction])
+
+    let export = ExportMenuBuilder()
+      .append(title: "Text", export: filteredRequests.map(RequestExporter.txtExport).map(\.string).joined(separator: "\n\n"))
+      .append(title: "Curl", export: filteredRequests.map(RequestExporter.curlExport).compactMap{ $0 }.joined(separator: "\n\n"))
+      .build()
+
+    let menu = UIMenu(title: "", children: [export, clearAction])
 
     navigationItem.rightBarButtonItem = gearItem
     gearItem.menu = menu
@@ -104,11 +110,11 @@ final class RequestsViewController: UITableViewController {
 
 
 extension RequestsViewController {
-  override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+  public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
     filteredRequests.count
   }
 
-  override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+  public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let request = filteredRequests[indexPath.item]
     if request.method == LogLevel.method {
       let cell = tableView.dequeueCell(LogRequestCell.self, for: indexPath)
@@ -123,14 +129,14 @@ extension RequestsViewController {
     }
   }
 
-  override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+  public override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
     UITableView.automaticDimension
   }
 }
 
 
 extension RequestsViewController {
-  override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+  public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     openRequestDetailVC(request: filteredRequests[indexPath.item])
     tableView.deselectRow(at: indexPath, animated: true)
   }
@@ -139,7 +145,7 @@ extension RequestsViewController {
 // MARK: - UISearchResultsUpdating Delegate
 
 extension RequestsViewController: UISearchResultsUpdating {
-  func updateSearchResults(for searchController: UISearchController) {
+  public func updateSearchResults(for searchController: UISearchController) {
     filteredRequests = filterRequests()
     tableView.reloadData()
   }
@@ -147,7 +153,7 @@ extension RequestsViewController: UISearchResultsUpdating {
 
 
 extension RequestsViewController: UISearchBarDelegate {
-  func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
+  public func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
     filteredRequests = filterRequests()
   }
 }

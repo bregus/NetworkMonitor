@@ -69,6 +69,12 @@ struct RequestModel {
   var responseHeaders: [String: String] = [:]
   var responseBody: Data?
 
+  var metrics: URLSessionTaskMetrics?
+
+  var responseContentType: ContentType? {
+    responseHeaders["Content-Type"].flatMap(ContentType.init)
+  }
+
   public init(log: LogMessage) {
     id = UUID().uuidString
     url = log.url

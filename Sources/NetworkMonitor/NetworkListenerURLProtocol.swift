@@ -119,6 +119,10 @@ extension NetwrokListenerUrlProtocol: URLSessionDataDelegate {
     }
   }
 
+  public func urlSession(_ session: URLSession, task: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
+    currentRequest?.metrics = metrics
+  }
+
   public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
     client?.urlProtocolDidFinishLoading(self)
   }

@@ -24,12 +24,12 @@ final class BodyDetailViewController: UIViewController {
       textView.attributedText = .render(metadata)
     } else {
       imageView.isHidden = true
-      textView.attributedText = .render(body.dict)
+      textView.attributedText = .render(try? JSONSerialization.jsonObject(with: body, options: []))
     }
   }
 
-  func setText(_ text: String) {
-    textView.text = text
+  func setText(_ text: NSAttributedString) {
+    textView.attributedText = text
   }
 
   private func setupNavigationItems() {
@@ -56,8 +56,8 @@ final class BodyDetailViewController: UIViewController {
 
     NSLayoutConstraint.activate([
       scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-      scrollView.leftAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leftAnchor),
-      scrollView.rightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.rightAnchor),
+      scrollView.leftAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leftAnchor, constant: 8),
+      scrollView.rightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.rightAnchor, constant: 8),
       scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
 
       stackView.topAnchor.constraint(equalTo: scrollView.topAnchor),
