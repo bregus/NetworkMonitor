@@ -121,7 +121,7 @@ final class DetailViewController: UICollectionViewController {
     if let error = request.error {
       items.append(OverviewItem(title: "Error: \(error.localizedDescription.capitalized)", disclosure: true, type: .error))
     }
-    items.append(OverviewItem(title: "Metrics", disclosure: true, type: .metrics))
+    items.append(OverviewItem(title: "Metrics", subtitle: (request.metrics?.totalTransferSize.totalBytes)!, disclosure: true, type: .metrics))
     return items
   }
 
@@ -223,7 +223,9 @@ extension DetailViewController {
       switch item.type {
       case .url: vc.setText(RequestExporter.txtExport(request: request))
       case .error: vc.setText(request.error.debugDescription)
-      case .metrics: vc.setText(String(describing: request.metrics!.transactionMetrics))
+      case .metrics:
+        guard let metrics = request.metrics else { return }
+        vc.setText(MetricsExporter.transactionDetail(metrics: metrics))
       default: break
       }
       navigationController?.pushViewController(vc, animated: true)

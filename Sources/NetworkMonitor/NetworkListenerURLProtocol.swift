@@ -120,7 +120,7 @@ extension NetwrokListenerUrlProtocol: URLSessionDataDelegate {
   }
 
   public func urlSession(_ session: URLSession, task: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
-    currentRequest?.metrics = metrics
+    currentRequest?.metrics = Metrics(metrics: metrics)
   }
 
   public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {

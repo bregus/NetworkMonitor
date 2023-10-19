@@ -5,16 +5,16 @@ final class RequestExporter {
     let txt = NSMutableAttributedString()
     txt.append("Overview\n".header())
     txt.append(overview(request: request))
-    txt.append("\n\n".value())
+    txt.append("\n".value())
     txt.append("Request Header\n".header())
     txt.append(header(request.requestHeaders))
-    txt.append("\n\n".value())
+    txt.append("\n".value())
     txt.append("Request Body\n".header())
     txt.append(body(request.requestBody))
-    txt.append("\n\n".value())
+    txt.append("\n".value())
     txt.append("Response Header\n".header())
     txt.append(header(request.responseHeaders))
-    txt.append("\n\n".value())
+    txt.append("\n".value())
     txt.append("Response Body\n".header())
     if let contentType = request.responseContentType {
       txt.append(contentType.isJSON ? body(request.responseBody) : contentType.rawValue.value())
@@ -25,13 +25,11 @@ final class RequestExporter {
 
   static func curlExport(request: RequestModel) -> String? {
     guard request.host != nil else { return nil }
-
     var components = ["curl -v"]
 
     if let method = request.method, method != "GET" {
       components.append("-X \(method)")
     }
-
     components += request.requestHeaders.map {
       let escapedValue = String(describing: $0.value).replacingOccurrences(of: "\"", with: "\\\"")
       return "-H \"\($0.key): \(escapedValue)\""
@@ -42,12 +40,11 @@ final class RequestExporter {
       escapedBody = escapedBody.replacingOccurrences(of: "\"", with: "\\\"")
       components.append("-d \"\(escapedBody)\"")
     }
-
     components.append("\"\(request.url)\"")
     return components.joined(separator: " \\\n\t")
   }
 
-  private static func overview(request: RequestModel) -> NSAttributedString {
+  static func overview(request: RequestModel) -> NSAttributedString {
     var overview: [String: String] = [:]
     overview["Date"] = request.date.stringWithFormat(dateFormat: "HH:mm:ss")
     overview["URL"] = request.url
@@ -78,5 +75,141 @@ final class RequestExporter {
   private static func body(_ body: Data?) -> NSAttributedString {
     guard let body else { return "-\n".value() }
     return .render(try? JSONSerialization.jsonObject(with: body, options: []))
+  }
+}
+
+final class MetricsExporter {
+  static func transactionDetail(metrics: Metrics) -> NSAttributedString {
+    let text = NSMutableAttributedString()
+    metrics.transactions.forEach {
+      text.append(RequestExporter.overview(request: $0.request))
+      text.append("\n".key())
+      text.append(transferSizes(metrics: $0))
+      text.append("\n".key())
+      text.append(protocolFrom(metrics: $0))
+      text.append("\n".key())
+      text.append(makeTiming(for: $0))
+      text.append("\n\n".key())
+    }
+    return text
+  }
+
+  private static func transferSizes(metrics: TransactionMetrics) -> NSAttributedString {
+    var items = [(String, String)]()
+    items.append(("Request Headers", metrics.transferSize.requestHeaderBytesSent.byteCount))
+    items.append(("Request Body", metrics.transferSize.requestBodyBytesSent.byteCount))
+    items.append(("Request Body (Encoded)", metrics.transferSize.requestBodyBytesBeforeEncoding.byteCount + "\n"))
+
+    items.append(("Response Headers", metrics.transferSize.responseHeaderBytesReceived.byteCount))
+    items.append(("Response Body", metrics.transferSize.responseBodyBytesReceived.byteCount))
+    items.append(("Response Body (Decoded)", metrics.transferSize.responseBodyBytesAfterDecoding.byteCount))
+
+    let result = NSMutableAttributedString()
+    result.append("Data Transfer\n".header())
+    return items.reduce(into: result) { partialResult, elem in
+      partialResult.append("\(elem.0): ".key())
+      partialResult.append("\(elem.1)\n".value())
+    }
+  }
+
+  private static func protocolFrom(metrics: TransactionMetrics) -> NSAttributedString {
+    var items = [String: String]()
+    items["Network Protocol"] = metrics.networkProtocol
+    items["Remote Address"] = metrics.remoteAddress
+    if let remotePort = metrics.remotePort, remotePort > 0 {
+      items["Remote Port"] = String(remotePort)
+    }
+    items["Local Address"] = metrics.localAddress
+    if let localPort = metrics.localPort, localPort > 0 {
+      items["Local Port"] = String(localPort)
+    }
+
+    let result = NSMutableAttributedString()
+    result.append("Protocol\n".header())
+    return items.reduce(into: result) { partialResult, elem in
+      partialResult.append("\(elem.key): ".key())
+      partialResult.append("\(elem.value)\n".value())
+    }
+  }
+
+  private static func conditions(metrics: TransactionMetrics) -> NSAttributedString {
+    var items = [String: String]()
+//    items["Cellular"] = TransactionMetrics.Conditions.isCellular.description
+//    items["Expensive"] = metrics.isExpensive.description
+//    items["Constrained"] = metrics.isConstrained.description
+//    items["Proxy Connection"] = metrics.isProxyConnection.description
+//    items["Reused Connection"] = metrics.isReusedConnection.description
+//    items["Multipath"] = metrics.isMultipath.description
+
+    let result = NSMutableAttributedString()
+    result.append("Conditions\n".header())
+    return items.reduce(into: result) { partialResult, elem in
+      partialResult.append("\(elem.key): ".key())
+      partialResult.append("\(elem.value)\n".value())
+    }
+  }
+
+  private static func makeTiming(for transaction: TransactionMetrics) -> NSAttributedString {
+    let timeFormatter = DateFormatter()
+    timeFormatter.dateFormat = "hh:mm:ss.SSS"
+
+    var startDate: Date?
+    var items: [(String, String)] = []
+    func addDate(_ date: Date?, title: String) {
+      guard let date = date else { return }
+      if items.isEmpty {
+        startDate = date
+      }
+      var value = timeFormatter.string(from: date)
+      if let startDate = startDate, startDate != date {
+        let duration = date.timeIntervalSince(startDate)
+        value += " (+\(DurationFormatter.string(from: duration)))"
+      }
+      items.append((title, value))
+    }
+    let timing = transaction.timing
+    addDate(timing.fetchStartDate, title: "Fetch Start")
+    addDate(timing.domainLookupStartDate, title: "Domain Lookup Start")
+    addDate(timing.domainLookupEndDate, title: "Domain Lookup End")
+    addDate(timing.connectStartDate, title: "Connect Start")
+    addDate(timing.secureConnectionStartDate, title: "Secure Connect Start")
+    addDate(timing.secureConnectionEndDate, title: "Secure Connect End")
+    addDate(timing.connectEndDate, title: "Connect End")
+    addDate(timing.requestStartDate, title: "Request Start")
+    addDate(timing.requestEndDate, title: "Request End")
+    addDate(timing.responseStartDate, title: "Response Start")
+    addDate(timing.responseEndDate, title: "Response End")
+    let result = NSMutableAttributedString()
+    result.append("Timings\n".header())
+    return items.reduce(into: result) { partialResult, elem in
+      partialResult.append("\(elem.0): ".key())
+      partialResult.append("\(elem.1)\n".value())
+    }
+  }
+}
+
+
+enum DurationFormatter {
+  static func string(from timeInterval: TimeInterval) -> String {
+    string(from: timeInterval, isPrecise: true)
+  }
+
+  static func string(from timeInterval: TimeInterval, isPrecise: Bool) -> String {
+    if timeInterval < 0.95 {
+      if isPrecise {
+        return String(format: "%.1f ms", timeInterval * 1000)
+      } else {
+        return String(format: "%.0f ms", timeInterval * 1000)
+      }
+    }
+    if timeInterval < 200 {
+      return String(format: "%.\(isPrecise ? "3" : "1")f s", timeInterval)
+    }
+    let minutes = timeInterval / 60
+    if minutes < 60 {
+      return String(format: "%.1f min", minutes)
+    }
+    let hours = timeInterval / (60 * 60)
+    return String(format: "%.1f h", hours)
   }
 }

@@ -69,7 +69,7 @@ struct RequestModel {
   var responseHeaders: [String: String] = [:]
   var responseBody: Data?
 
-  var metrics: URLSessionTaskMetrics?
+  var metrics: Metrics?
 
   var responseContentType: ContentType? {
     responseHeaders["Content-Type"].flatMap(ContentType.init)
@@ -116,7 +116,7 @@ struct RequestModel {
     }
   }
 
-  mutating func updateWith(response: URLResponse) {
+  mutating func updateWith(response: URLResponse?) {
     guard let response = response as? HTTPURLResponse else {return}
     code = response.statusCode
     responseHeaders = response.allHeaderFields.reduce(into: [String:String]()) { $0["\($1.key)"] = "\($1.value)" }
