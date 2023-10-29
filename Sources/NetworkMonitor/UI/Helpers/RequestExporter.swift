@@ -11,7 +11,7 @@ final class RequestExporter {
     txt.append("\n".value())
     txt.append("Request Body\n".header())
     txt.append(body(request.requestBody))
-    txt.append("\n".value())
+    txt.append("\n\n".value())
     txt.append("Response Header\n".header())
     txt.append(header(request.responseHeaders))
     txt.append("\n".value())
@@ -44,6 +44,22 @@ final class RequestExporter {
     return components.joined(separator: " \\\n\t")
   }
 
+  static func logExport(request: RequestModel) -> NSAttributedString {
+    let text = NSMutableAttributedString()
+    var overview = [(String, String)]()
+    overview.append((request.scheme!.uppercased(), request.path ?? request.url))
+    overview.append(("Date", request.date.stringWithFormat(dateFormat: "HH:mm:ss")!))
+
+    text.append(.render(overview))
+    text.append("\n".value())
+    text.append("Parameters\n".header())
+    text.append(header(request.responseHeaders))
+    text.append("\n".value())
+    text.append("Metadata\n".header())
+    text.append(body(request.responseBody))
+    return text
+  }
+
   static func overview(request: RequestModel) -> NSAttributedString {
     var overview: [String: String] = [:]
     overview["Date"] = request.date.stringWithFormat(dateFormat: "HH:mm:ss")
@@ -64,7 +80,7 @@ final class RequestExporter {
       }
   }
 
-  private static func header(_ headers: [String: String]?) -> NSAttributedString {
+  static func header(_ headers: [String: String]?) -> NSAttributedString {
     guard let headers, !headers.isEmpty else { return "-\n".value() }
     return headers.reduce(into: NSMutableAttributedString()) { partialResult, elem in
       partialResult.append("\(elem.key): ".key())
@@ -73,8 +89,8 @@ final class RequestExporter {
   }
 
   private static func body(_ body: Data?) -> NSAttributedString {
-    guard let body else { return "-\n".value() }
-    return .render(try? JSONSerialization.jsonObject(with: body, options: []))
+    guard let body else { return "-".value() }
+    return .render(body)
   }
 }
 
@@ -89,6 +105,8 @@ final class MetricsExporter {
       text.append(protocolFrom(metrics: $0))
       text.append("\n".key())
       text.append(makeTiming(for: $0))
+      text.append("\n".key())
+      text.append(conditions(metrics: $0))
       text.append("\n\n".key())
     }
     return text
@@ -106,47 +124,42 @@ final class MetricsExporter {
 
     let result = NSMutableAttributedString()
     result.append("Data Transfer\n".header())
-    return items.reduce(into: result) { partialResult, elem in
-      partialResult.append("\(elem.0): ".key())
-      partialResult.append("\(elem.1)\n".value())
-    }
+    result.append(.render(items))
+    return result
   }
 
   private static func protocolFrom(metrics: TransactionMetrics) -> NSAttributedString {
-    var items = [String: String]()
-    items["Network Protocol"] = metrics.networkProtocol
-    items["Remote Address"] = metrics.remoteAddress
+    var items = [(String, String)]()
+
+    items.append(("Network Protocol", metrics.networkProtocol ?? ""))
+    items.append(("Remote Address", metrics.remoteAddress ?? ""))
     if let remotePort = metrics.remotePort, remotePort > 0 {
-      items["Remote Port"] = String(remotePort)
+      items.append(("Remote Port", String(remotePort)))
     }
-    items["Local Address"] = metrics.localAddress
+    items.append(("Local Address", metrics.localAddress ?? ""))
     if let localPort = metrics.localPort, localPort > 0 {
-      items["Local Port"] = String(localPort)
+      items.append(("Local Port", String(localPort)))
     }
 
     let result = NSMutableAttributedString()
     result.append("Protocol\n".header())
-    return items.reduce(into: result) { partialResult, elem in
-      partialResult.append("\(elem.key): ".key())
-      partialResult.append("\(elem.value)\n".value())
-    }
+    result.append(.render(items))
+    return result
   }
 
   private static func conditions(metrics: TransactionMetrics) -> NSAttributedString {
-    var items = [String: String]()
-//    items["Cellular"] = TransactionMetrics.Conditions.isCellular.description
-//    items["Expensive"] = metrics.isExpensive.description
-//    items["Constrained"] = metrics.isConstrained.description
-//    items["Proxy Connection"] = metrics.isProxyConnection.description
-//    items["Reused Connection"] = metrics.isReusedConnection.description
-//    items["Multipath"] = metrics.isMultipath.description
+    var items = [(String, String)]()
+    items.append(("Cellular", metrics.conditions.isCellular.description))
+    items.append(("Expensive", metrics.conditions.isExpensive.description))
+    items.append(("Constrained", metrics.conditions.isConstrained.description))
+    items.append(("Proxy Connection", metrics.conditions.isProxyConnection.description))
+    items.append(("Reused Connection", metrics.conditions.isReusedConnection.description))
+    items.append(("Multipath", metrics.conditions.isMultipath.description))
 
     let result = NSMutableAttributedString()
     result.append("Conditions\n".header())
-    return items.reduce(into: result) { partialResult, elem in
-      partialResult.append("\(elem.key): ".key())
-      partialResult.append("\(elem.value)\n".value())
-    }
+    result.append(.render(items))
+    return result
   }
 
   private static func makeTiming(for transaction: TransactionMetrics) -> NSAttributedString {
@@ -181,13 +194,10 @@ final class MetricsExporter {
     addDate(timing.responseEndDate, title: "Response End")
     let result = NSMutableAttributedString()
     result.append("Timings\n".header())
-    return items.reduce(into: result) { partialResult, elem in
-      partialResult.append("\(elem.0): ".key())
-      partialResult.append("\(elem.1)\n".value())
-    }
+    result.append(.render(items))
+    return result
   }
 }
-
 
 enum DurationFormatter {
   static func string(from timeInterval: TimeInterval) -> String {

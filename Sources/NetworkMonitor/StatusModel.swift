@@ -49,6 +49,15 @@ enum StatusCodeFormatter {
 }
 
 enum ErrorFormatter {
+  static func description(error: Error) -> NSAttributedString {
+    let nsError = error as NSError
+    var items = [(String, String)]()
+    items.append(("Code", "\(nsError.code)"))
+    items.append(("Domain", nsError.domain))
+    items.append(("Description", nsError.debugDescription))
+    return .render(items)
+  }
+
   static func shortErrorDescription(for request: RequestModel) -> String {
     if let errorCode = (request.error as? URLError)?.errorCode {
       return descriptionForURLErrorCode(errorCode)

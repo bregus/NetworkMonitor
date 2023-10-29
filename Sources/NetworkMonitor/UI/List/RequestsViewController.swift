@@ -98,9 +98,14 @@ final public class RequestsViewController: UITableViewController {
     gearItem.menu = menu
   }
 
-  private func openRequestDetailVC(request: RequestModel){
-    let requestDetailVC = DetailViewController(request: request)
-    navigationController?.pushViewController(requestDetailVC, animated: true)
+  private func openRequestDetailVC(request: RequestModel) {
+    if request.method == LogLevel.method {
+      let vc = BodyDetailViewController()
+      vc.setText(RequestExporter.logExport(request: request))
+      navigationController?.pushViewController(vc, animated: true)
+    } else {
+      navigationController?.pushViewController(DetailViewController(request: request), animated: true)
+    }
   }
 
   deinit {

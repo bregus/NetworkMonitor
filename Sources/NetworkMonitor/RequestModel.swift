@@ -89,7 +89,7 @@ struct RequestModel {
   }
 
   init(request: NSURLRequest, session: URLSession?) {
-    id = request.hash.description
+    id = UUID().uuidString
     url = request.url?.absoluteString ?? ""
     host = request.url?.host
     port = request.url?.port

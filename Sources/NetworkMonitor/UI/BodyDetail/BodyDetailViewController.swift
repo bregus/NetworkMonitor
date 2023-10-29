@@ -24,7 +24,7 @@ final class BodyDetailViewController: UIViewController {
       textView.attributedText = .render(metadata)
     } else {
       imageView.isHidden = true
-      textView.attributedText = .render(try? JSONSerialization.jsonObject(with: body, options: []))
+      textView.attributedText = .render(body)
     }
   }
 

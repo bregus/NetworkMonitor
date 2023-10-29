@@ -27,6 +27,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
   func sendRequests() {
     let just = JustOf<HTTP>(session: .shared)
+    just.post("https://jsonplaceholder.typicode.com/posts", data: ["ку": "rey"], headers: ["content-type": "application/json"], asyncCompletionHandler: { _ in })
     just.post("https://jsonplaceholder.typicode.com/posts", data: ["r": "e"], headers: ["content-type": "application/json"], asyncCompletionHandler: { _ in })
     just.get("https://jsonplaceholder.typicode.com/posts", data: ["r": "e"], headers: ["content-type": "application/json"], asyncCompletionHandler: { _ in })
     just.get("https://jsonplaceholder.typicode.com/posts/1", asyncCompletionHandler: { _ in })

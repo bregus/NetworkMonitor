@@ -60,12 +60,7 @@ final class DetailViewController: UICollectionViewController {
     }
   }
 
-
-  private lazy var sections: [Section] = {
-    request.method == LogLevel.method ? logSections : requestSections
-  }()
-
-  private lazy var requestSections: [Section] = [
+  private lazy var sections: [Section] = [
     .overview(overview),
     .group([
       .header(SectionItem(
@@ -90,26 +85,6 @@ final class DetailViewController: UICollectionViewController {
         title: "Response body",
         body: request.responseBody)
       )
-    ])
-  ]
-
-  private lazy var logSections: [Section] = [
-    .overview([OverviewItem(
-      title: request.scheme?.uppercased() ?? "",
-      subtitle: request.path ?? request.url,
-      disclosure: false, inline: false, type: .status)
-    ]),
-    .group([
-      .header(SectionItem(
-        icon: "list.bullet.rectangle",
-        title: "Parameters",
-        fields: request.responseHeaders.map { FieldItem(title: $0.key,subtitle: $0.value) }
-      )),
-      .body(BodyItem(
-        icon: "cylinder.split.1x2",
-        title: "Metadata",
-        body: request.responseBody
-      ))
     ])
   ]
 
@@ -163,7 +138,6 @@ final class DetailViewController: UICollectionViewController {
   }
 
   private func setupNavigationItems() {
-    guard request.method != LogLevel.method else { return }
     let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: nil)
     navigationItem.rightBarButtonItem = shareButton
     shareButton.menu = ExportMenuBuilder()
@@ -189,9 +163,6 @@ final class DetailViewController: UICollectionViewController {
         items.forEach { item in
           guard case .header(let fields) = item else { return }
           sectionSnapshot.append(fields.fields.map(ListItem.field), to: item)
-          if request.method == LogLevel.method {
-            sectionSnapshot.expand([item])
-          }
         }
       }
       dataSource.apply(sectionSnapshot, to: sectionItem, animatingDifferences: false)
@@ -222,7 +193,7 @@ extension DetailViewController {
       let vc = BodyDetailViewController()
       switch item.type {
       case .url: vc.setText(RequestExporter.txtExport(request: request))
-      case .error: vc.setText(request.error.debugDescription)
+      case .error: vc.setText(ErrorFormatter.description(error: request.error!))
       case .metrics:
         guard let metrics = request.metrics else { return }
         vc.setText(MetricsExporter.transactionDetail(metrics: metrics))

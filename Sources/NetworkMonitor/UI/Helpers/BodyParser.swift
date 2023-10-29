@@ -7,7 +7,9 @@ let kJSONSymbolColor = UIColor.label
 
 let kJSONNullValueColor = UIColor(rgb: 0xFF7AB2)
 let kJSONBoolValueColor = UIColor(rgb: 0xFF7AB2)
-let kJSONNumberValueColor = UITraitCollection.current.userInterfaceStyle == .dark ? UIColor(rgb: 0xD9C97C) : UIColor(rgb: 0xAD3DA4)
+var kJSONNumberValueColor: UIColor {
+  UITraitCollection.current.userInterfaceStyle == .dark ? UIColor(rgb: 0xD9C97C) : UIColor(rgb: 0xAD3DA4)
+}
 let kJSONStringValueColor = UIColor(rgb: 0xff8170)
 
 extension NSAttributedString {
@@ -26,34 +28,37 @@ extension NSAttributedString {
     return render(element: element, level: 0, ext: 0)
   }
 
-  private class func render(element: Any?, level: Int, ext: CGFloat, style: NSParagraphStyle? = nil) -> NSAttributedString {
+  private static func render(element: Any?, level: Int, ext: CGFloat, style: NSParagraphStyle? = nil) -> NSAttributedString {
     guard let element = element, element is NSNull == false else {
       return NSAttributedString.init(string: "null", color: kJSONNullValueColor)
     }
 
     switch element {
+    case let data as Data:
+      return attributedString(data: data)
+    case let tupleArray as [(String, String)]:
+      return attributedString(items: tupleArray)
     case let dic as [String: Any]:
       return attributedString(dic: dic, level: level, ext: ext)
     case let arr as [Any]:
       return attributedString(arr: arr, level: level, ext: ext)
     case let number as NSNumber:
       if number.isBool {
-        return NSAttributedString.init(string: number.boolValue ? "true" : "false", color: kJSONBoolValueColor)
+        return .init(string: number.boolValue ? "true" : "false", color: kJSONBoolValueColor)
       }
       var string = "\(number)"
       if number.objCType.pointee == 100 {
         string = (Decimal.init(string: String.init(format: "%f", number.doubleValue))! as NSDecimalNumber).stringValue
       }
-      return NSAttributedString.init(string: string, color: kJSONNumberValueColor, style: style)
+      return .init(string: string, color: kJSONNumberValueColor, style: style)
     case let string as String:
-      return NSAttributedString.init(string: "\"" + string + "\"", color: kJSONStringValueColor, style: style)
+      return .init(string: "\"" + string + "\"", color: kJSONStringValueColor, style: style)
     default:
-      return NSAttributedString.init(string: "\(element)", color: kJSONStringValueColor, style: style)
+      return .init(string: "\(element)", color: kJSONStringValueColor, style: style)
     }
   }
 
-  private class func attributedString(dic: [String: Any], level: Int, ext: CGFloat) -> NSMutableAttributedString {
-
+  private static func attributedString(dic: [String: Any], level: Int, ext: CGFloat) -> NSMutableAttributedString {
     let headPara = NSMutableParagraphStyle()
     headPara.firstLineHeadIndent = CGFloat(level * 10)
 
@@ -94,7 +99,7 @@ extension NSAttributedString {
     return mattr
   }
 
-  private class func attributedString(arr: [Any], level: Int, ext: CGFloat) -> NSMutableAttributedString {
+  private static func attributedString(arr: [Any], level: Int, ext: CGFloat) -> NSMutableAttributedString {
 
     let headPara = NSMutableParagraphStyle()
     headPara.firstLineHeadIndent = CGFloat(level * 10)
@@ -129,6 +134,18 @@ extension NSAttributedString {
     mattr.append(NSAttributedString.init(string: "]", color: kJSONSymbolColor, style: tailPara))
 
     return mattr
+  }
+
+  private static func attributedString(items: [(String, String)]) -> NSMutableAttributedString {
+    let result = NSMutableAttributedString()
+    return items.reduce(into: result) { partialResult, elem in
+      partialResult.append("\(elem.0): ".key())
+      partialResult.append("\(elem.1)\n".value())
+    }
+  }
+
+  private static func attributedString(data: Data) -> NSAttributedString {
+    .render(try? JSONSerialization.jsonObject(with: data, options: []))
   }
 }
 

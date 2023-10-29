@@ -103,25 +103,21 @@ struct TransactionMetrics {
     self.tlsSuite = metrics.negotiatedTLSCipherSuite?.rawValue
   }
 
-  struct Conditions: OptionSet, Codable, Sendable {
-    let rawValue: Int8
-    init(rawValue: Int8) { self.rawValue = rawValue }
-
-    static let isProxyConnection = Conditions(rawValue: 1 << 0)
-    static let isReusedConnection = Conditions(rawValue: 1 << 1)
-    static let isCellular = Conditions(rawValue: 1 << 2)
-    static let isExpensive = Conditions(rawValue: 1 << 3)
-    static let isConstrained = Conditions(rawValue: 1 << 4)
-    static let isMultipath = Conditions(rawValue: 1 << 5)
+  struct Conditions {
+    let isProxyConnection: Bool
+    let isReusedConnection: Bool
+    let isCellular: Bool
+    let isExpensive: Bool
+    let isConstrained: Bool
+    let isMultipath: Bool
 
     init(metrics: URLSessionTaskTransactionMetrics) {
-      self = []
-      if metrics.isProxyConnection { insert(.isProxyConnection) }
-      if metrics.isReusedConnection { insert(.isReusedConnection) }
-      if metrics.isCellular { insert(.isCellular) }
-      if metrics.isExpensive { insert(.isExpensive) }
-      if metrics.isConstrained { insert(.isConstrained) }
-      if metrics.isMultipath { insert(.isMultipath) }
+      isProxyConnection = metrics.isProxyConnection
+      isReusedConnection = metrics.isReusedConnection
+      isCellular = metrics.isCellular
+      isExpensive = metrics.isExpensive
+      isConstrained = metrics.isConstrained
+      isMultipath = metrics.isMultipath
     }
   }
 }
