@@ -1,16 +1,25 @@
 import UIKit
 
 final class ExportMenuBuilder {
+  private let title: String
   private var actions: [UIAction] = []
 
-  @discardableResult
-  func append(title: String, export: Any?) -> Self {
+  init(title: String = "") {
+    self.title = title
+  }
+
+  func export(title: String, export: Any?) -> Self {
     actions.append(UIAction(title: title) { _ in self.openShareSheet(item: export) })
     return self
   }
 
+  func append(title: String, action: @escaping (UIAction) -> Void) -> Self {
+    actions.append(UIAction(title: title, handler: action))
+    return self
+  }
+
   func build() -> UIMenu {
-    return UIMenu(title: "Export", image: UIImage(systemName: "square.and.arrow.up"), children: actions)
+    return UIMenu(title: title, children: actions)
   }
 
   private func openShareSheet(item: Any?) {

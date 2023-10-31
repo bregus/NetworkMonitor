@@ -1,20 +1,23 @@
 import Foundation
 
 final class RequestExporter {
-  static func txtExport(request: RequestModel) -> NSAttributedString {
+  static func txtExport(request: RequestModel, short: Bool = false) -> NSAttributedString {
+    guard request.method != LogLevel.method else { return logExport(request: request) }
     let txt = NSMutableAttributedString()
     txt.append("Overview\n".header())
     txt.append(overview(request: request))
     txt.append("\n".value())
-    txt.append("Request Header\n".header())
-    txt.append(header(request.requestHeaders))
-    txt.append("\n".value())
-    txt.append("Request Body\n".header())
-    txt.append(body(request.requestBody))
-    txt.append("\n\n".value())
-    txt.append("Response Header\n".header())
-    txt.append(header(request.responseHeaders))
-    txt.append("\n".value())
+    if !short {
+      txt.append("Request Header\n".header())
+      txt.append(header(request.requestHeaders))
+      txt.append("\n".value())
+      txt.append("Request Body\n".header())
+      txt.append(body(request.requestBody))
+      txt.append("\n\n".value())
+      txt.append("Response Header\n".header())
+      txt.append(header(request.responseHeaders))
+      txt.append("\n".value())
+    }
     txt.append("Response Body\n".header())
     if let contentType = request.responseContentType {
       txt.append(contentType.isJSON ? body(request.responseBody) : contentType.rawValue.value())
@@ -47,7 +50,9 @@ final class RequestExporter {
   static func logExport(request: RequestModel) -> NSAttributedString {
     let text = NSMutableAttributedString()
     var overview = [(String, String)]()
-    overview.append((request.scheme!.uppercased(), request.path ?? request.url))
+    if let scheme = request.scheme {
+      overview.append((scheme.uppercased(), request.path ?? request.url))
+    }
     overview.append(("Date", request.date.stringWithFormat(dateFormat: "HH:mm:ss")!))
 
     text.append(.render(overview))
@@ -72,24 +77,16 @@ final class RequestExporter {
     }
     if request.duration != 0 { overview["Duration"] = request.duration.formattedMilliseconds }
 
-    return overview
-      .sorted(by: >)
-      .reduce(into: NSMutableAttributedString()) { partialResult, elem in
-        partialResult.append("\(elem.key): ".key())
-        partialResult.append("\(elem.value)\n".value())
-      }
+    return .render(overview.sorted(by: >).map {($0.key, $0.value)})
   }
 
   static func header(_ headers: [String: String]?) -> NSAttributedString {
     guard let headers, !headers.isEmpty else { return "-\n".value() }
-    return headers.reduce(into: NSMutableAttributedString()) { partialResult, elem in
-      partialResult.append("\(elem.key): ".key())
-      partialResult.append("\(elem.value)\n".value())
-    }
+    return .render(headers.sorted(by: >).map {($0.key, $0.value)})
   }
 
-  private static func body(_ body: Data?) -> NSAttributedString {
-    guard let body else { return "-".value() }
+  static func body(_ body: Data?) -> NSAttributedString {
+    guard let body, !body.isEmpty else { return "-".value() }
     return .render(body)
   }
 }

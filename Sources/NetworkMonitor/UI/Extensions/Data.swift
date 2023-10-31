@@ -25,18 +25,4 @@ extension Data {
   var weight: String {
     Int64(count).byteCount
   }
-
-  var prettyPrintedJSONString: String? {
-    guard
-      let object = try? JSONSerialization.jsonObject(with: self, options: []),
-      let data = try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted])
-    else { return String(data: self, encoding: .utf8) ?? String(data: self, encoding: .ascii) }
-
-    return String(data: data, encoding: .utf8)?.replacingOccurrences(of: "\\/", with: "/")
-  }
-
-  var dict: [String: Any] {
-    guard let object = try? JSONSerialization.jsonObject(with: self, options: []) as? [String: Any] else { return [:] }
-    return object
-  }
 }

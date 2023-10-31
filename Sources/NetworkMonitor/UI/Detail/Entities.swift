@@ -13,15 +13,14 @@ enum Section: Hashable {
 
 enum ListItem: Hashable {
   case overview(OverviewItem)
-  case header(SectionItem)
-  case field(FieldItem)
+  case header(HeaderItem)
   case body(BodyItem)
 }
 
-struct SectionItem: Hashable {
+struct HeaderItem: Hashable {
   var icon: String = ""
   let title: String
-  let fields: [FieldItem]
+  let headers: [String: String]
 }
 
 struct OverviewItem: Hashable {
@@ -36,11 +35,6 @@ struct OverviewItem: Hashable {
   let disclosure: Bool
   var inline: Bool = true
   var type: ItemType
-}
-
-struct FieldItem: Hashable {
-  let title: String
-  let subtitle: String
 }
 
 struct BodyItem: Hashable {

@@ -1,21 +1,6 @@
 import Foundation
 import UserNotifications
 
-@propertyWrapper
-struct Atomic<Value> {
-  private let queue = DispatchQueue(label: "com.bregus.networkMonitor")
-  private var value: Value
-
-  init(wrappedValue: Value) {
-    self.value = wrappedValue
-  }
-
-  var wrappedValue: Value {
-    get { return queue.sync { value } }
-    set { queue.sync { value = newValue } }
-  }
-}
-
 enum FilterType: String, CaseIterable {
   typealias Filter = () -> [RequestModel]
   case network
@@ -34,36 +19,38 @@ enum FilterType: String, CaseIterable {
   }
 }
 
-final class Storage: NSObject {
+final class Storage {
   static let shared: Storage = Storage()
 
-  @Atomic private(set) var requests: [RequestModel] = []
+  var requests: [RequestModel] {
+    get { _requests.wrappedValue }
+  }
+
+  private var _requests = Protected<[RequestModel]>([])
 
   func saveRequest(request: RequestModel?) {
     guard let request else { return }
-
     if let index = requests.firstIndex(where: { request.id == $0.id }) {
-      requests[index] = request
+      _requests.write { $0[index] = request }
     } else {
-      showNotification()
-      requests.insert(request, at: 0)
+      sendNotification()
+      _requests.write { $0.insert(request, at: 0) }
     }
 
-    NotificationCenter.default.post(name: NSNotification.Name.NewRequestNotification, object: nil)
+    NotificationCenter.default.post(name: .newRequestNotification, object: nil)
   }
 
   func clearRequests() {
-    requests.removeAll()
-    NotificationCenter.default.post(name: NSNotification.Name.NewRequestNotification, object: nil)
+    _requests.write { $0.removeAll() }
+    NotificationCenter.default.post(name: .newRequestNotification, object: nil)
   }
 
-  func showNotification() {
+  func sendNotification() {
     UNUserNotificationCenter.current().getDeliveredNotifications { requests in
       guard requests.isEmpty else { return }
       let content = UNMutableNotificationContent()
-      content.title = "New Request Recieved"
+      content.title = "🤖 New Request Recieved"
       content.categoryIdentifier = "monitor"
-      content.userInfo["category"] = "monitor"
       let request = UNNotificationRequest(identifier: "com.bregus.networkMonitor", content: content, trigger: nil)
       UNUserNotificationCenter.current().add(request)
     }
@@ -71,5 +58,5 @@ final class Storage: NSObject {
 }
 
 extension NSNotification.Name {
-  static let NewRequestNotification = NSNotification.Name(rawValue: "Name.NetworkMonitorNewRequest")
+  static let newRequestNotification = NSNotification.Name(rawValue: "Name.NetworkMonitorNewRequest")
 }

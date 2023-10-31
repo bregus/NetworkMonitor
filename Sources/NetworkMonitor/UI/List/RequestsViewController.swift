@@ -1,30 +1,31 @@
 import UIKit
+import Combine
 
 final public class RequestsViewController: UITableViewController {
-  private var searchController = UISearchController(searchResultsController: nil)
-  @Atomic private var filteredRequests: [RequestModel] = FilterType.allCases.first?.filter() ?? []
+  private let searchController = UISearchController(searchResultsController: nil)
+  private var filteredRequests: [RequestModel] { filterRequests() }
+  private var store = Set<AnyCancellable>()
 
   public override func viewDidLoad() {
     super.viewDidLoad()
-    title = "Monitor"
+    title = "Console"
 
     addNavigationItems()
     addSearchController()
     addKeyboardToolbar()
     navigationItem.largeTitleDisplayMode = .never
-    navigationItem.hidesSearchBarWhenScrolling = false
 
     tableView.registerCell(RequestCell.self)
     tableView.registerCell(LogRequestCell.self)
 
-    NotificationCenter.default.addObserver(forName: NSNotification.Name.NewRequestNotification, object: nil, queue: nil) { [weak self] (notification) in
-      DispatchQueue.main.async { [weak self] in
+    NotificationCenter.default.publisher(for: .newRequestNotification)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
         guard let self else { return }
-        self.filteredRequests = self.filterRequests()
         self.updateSegments()
         self.tableView.reloadData()
       }
-    }
+      .store(in: &store)
   }
 
   private func updateSegments() {
@@ -33,7 +34,6 @@ final public class RequestsViewController: UITableViewController {
 
   //  MARK: - Search
   private func addSearchController(){
-    searchController = UISearchController(searchResultsController: nil)
     searchController.searchResultsUpdater = self
     searchController.obscuresBackgroundDuringPresentation = false
     searchController.hidesNavigationBarDuringPresentation = false
@@ -41,6 +41,7 @@ final public class RequestsViewController: UITableViewController {
     searchController.searchBar.barStyle = .default
     searchController.searchBar.showsScopeBar = true
     searchController.searchBar.placeholder = "Search"
+    navigationItem.hidesSearchBarWhenScrolling = false
     navigationItem.searchController = searchController
     definesPresentationContext = true
     updateSegments()
@@ -87,12 +88,7 @@ final public class RequestsViewController: UITableViewController {
       self.clearRequests()
     }
 
-    let export = ExportMenuBuilder()
-      .append(title: "Text", export: filteredRequests.map(RequestExporter.txtExport).map(\.string).joined(separator: "\n\n"))
-      .append(title: "Curl", export: filteredRequests.map(RequestExporter.curlExport).compactMap{ $0 }.joined(separator: "\n\n"))
-      .build()
-
-    let menu = UIMenu(title: "", children: [export, clearAction])
+    let menu = UIMenu(title: "", children: [clearAction])
 
     navigationItem.rightBarButtonItem = gearItem
     gearItem.menu = menu
@@ -108,8 +104,26 @@ final public class RequestsViewController: UITableViewController {
     }
   }
 
-  deinit {
-    NotificationCenter.default.removeObserver(self, name: NSNotification.Name.NewRequestNotification, object: nil)
+  public override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+    let request = filteredRequests[indexPath.item]
+    let actionProvider: UIContextMenuActionProvider = { _ in
+      return ExportMenuBuilder()
+        .export(title: "Export", export: RequestExporter.txtExport(request: request))
+        .append(title: "Copy URL") { _ in UIPasteboard.general.string = request.url }
+        .build()
+    }
+    return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: { () -> UIViewController? in
+      let vc = PreviewController()
+      vc.setText(RequestExporter.txtExport(request: request, short: true))
+      return vc
+    }, actionProvider: actionProvider)
+  }
+
+  public override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
+    animator.addCompletion {
+      guard let index = configuration.identifier as? IndexPath else { return }
+      self.openRequestDetailVC(request: self.filteredRequests[index.item])
+    }
   }
 }
 
@@ -148,17 +162,8 @@ extension RequestsViewController {
 }
 
 // MARK: - UISearchResultsUpdating Delegate
-
 extension RequestsViewController: UISearchResultsUpdating {
   public func updateSearchResults(for searchController: UISearchController) {
-    filteredRequests = filterRequests()
     tableView.reloadData()
-  }
-}
-
-
-extension RequestsViewController: UISearchBarDelegate {
-  public func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
-    filteredRequests = filterRequests()
   }
 }

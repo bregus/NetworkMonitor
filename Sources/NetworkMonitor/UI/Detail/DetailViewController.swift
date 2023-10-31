@@ -1,5 +1,5 @@
 import UIKit
-import SPIndicator
+import Combine
 
 final class DetailViewController: UICollectionViewController {
   let overViewCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, OverviewItem> {
@@ -19,31 +19,18 @@ final class DetailViewController: UICollectionViewController {
     }
   }
 
-  let headerCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, SectionItem> {
+  let headerCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, HeaderItem> {
     (cell, indexPath, sectionItem) in
     var content = UIListContentConfiguration.valueCell()
     content.text = sectionItem.title
     content.textProperties.font = .systemFont(ofSize: 16, weight: .medium)
     content.image = UIImage(systemName: sectionItem.icon)
-    content.secondaryText = sectionItem.fields.count.description
+    content.secondaryText = sectionItem.headers.count.description
     cell.contentConfiguration = content
 
-    if !sectionItem.fields.isEmpty {
-      let headerDisclosureOption = UICellAccessory.OutlineDisclosureOptions(style: .header)
-      cell.accessories = [.outlineDisclosure(options:headerDisclosureOption)]
+    if !sectionItem.headers.isEmpty {
+      cell.accessories = [.disclosureIndicator(options: .init(tintColor: .systemBlue))]
     }
-  }
-
-  let fieldCellConfiguration = UICollectionView.CellRegistration<UICollectionViewListCell, FieldItem> {
-    (cell, indexPath, symbolItem) in
-
-    var content = cell.defaultContentConfiguration()
-    content.text = symbolItem.title
-    content.secondaryText = symbolItem.subtitle
-    content.secondaryTextProperties.font = .systemFont(ofSize: 16, weight: .medium)
-    content.textProperties.color = .secondaryLabel
-    content.textProperties.font = .systemFont(ofSize: 14)
-    cell.contentConfiguration = content
   }
 
   let bodyCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, BodyItem> {
@@ -60,13 +47,13 @@ final class DetailViewController: UICollectionViewController {
     }
   }
 
-  private lazy var sections: [Section] = [
+  private var sections: [Section] {[
     .overview(overview),
     .group([
-      .header(SectionItem(
+      .header(HeaderItem(
         icon: "list.bullet.rectangle",
         title: "Request headers",
-        fields: request.requestHeaders.map { FieldItem(title: $0.key, subtitle: $0.value) }
+        headers: request.requestHeaders
       )),
       .body(BodyItem(
         icon: "arrow.up.circle.fill",
@@ -75,10 +62,10 @@ final class DetailViewController: UICollectionViewController {
       )
     ]),
     .group([
-      .header(SectionItem(
+      .header(HeaderItem(
         icon: "list.bullet.rectangle",
         title: "Response headers",
-        fields: request.responseHeaders.map { FieldItem(title: $0.key, subtitle: $0.value) }
+        headers: request.responseHeaders
       )),
       .body(BodyItem(
         icon: "arrow.down.circle.fill",
@@ -86,17 +73,34 @@ final class DetailViewController: UICollectionViewController {
         body: request.responseBody)
       )
     ])
-  ]
+  ]}
 
   private var overview: [OverviewItem] {
     var items = [OverviewItem]()
     let status = StatusModel(request: request)
-    items.append(OverviewItem(icon: status.systemImage, title: status.title, color: status.tint, subtitle: request.duration.formattedMilliseconds.description, disclosure: false, type: .status))
+    items.append(OverviewItem(
+      icon: status.systemImage,
+      title: status.title,
+      color: status.tint,
+      subtitle: request.duration.formattedMilliseconds.description,
+      disclosure: false, type: .status)
+    )
     items.append(OverviewItem(title: (request.method ?? "") + " " + request.url, disclosure: true, type: .url))
     if let error = request.error {
-      items.append(OverviewItem(title: "Error: \(error.localizedDescription.capitalized)", disclosure: true, type: .error))
+      items.append(OverviewItem(
+        title: "Error: \(error.localizedDescription.capitalized)",
+        disclosure: true, type: .error)
+      )
     }
-    items.append(OverviewItem(title: "Metrics", subtitle: (request.metrics?.totalTransferSize.totalBytes)!, disclosure: true, type: .metrics))
+    if let metrics = request.metrics {
+      items.append(OverviewItem(
+        icon: "chart.pie.fill",
+        title: "Metrics",
+        color: .systemOrange,
+        subtitle: metrics.totalTransferSize.totalBytes,
+        disclosure: true, type: .metrics)
+      )
+    }
     return items
   }
 
@@ -109,15 +113,13 @@ final class DetailViewController: UICollectionViewController {
     case .header(let sectionItem):
       return collectionView.dequeueConfiguredReusableCell(using: self.headerCellRegistration, for: indexPath, item: sectionItem)
 
-    case .field(let symbolItem):
-      return collectionView.dequeueConfiguredReusableCell(using: self.fieldCellConfiguration, for: indexPath, item: symbolItem)
-
     case .body(let bodyItem):
       return collectionView.dequeueConfiguredReusableCell(using: self.bodyCellRegistration, for: indexPath, item: bodyItem)
     }
   }
 
-  private let request: RequestModel
+  private var request: RequestModel
+  private var store = Set<AnyCancellable>()
 
   init(request: RequestModel) {
     let layoutConfig = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
@@ -135,14 +137,23 @@ final class DetailViewController: UICollectionViewController {
     title = request.path
     setupNavigationItems()
     createSnapshot()
+
+    NotificationCenter.default.publisher(for: .newRequestNotification)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        guard let self, let updated = Storage.shared.requests.first(where: { $0.id == self.request.id && $0 != self.request }) else { return }
+        self.request = updated
+        self.createSnapshot()
+      }
+      .store(in: &store)
   }
 
   private func setupNavigationItems() {
     let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: nil)
     navigationItem.rightBarButtonItem = shareButton
-    shareButton.menu = ExportMenuBuilder()
-      .append(title: "Text", export: RequestExporter.txtExport(request: request))
-      .append(title: "Curl", export: RequestExporter.curlExport(request: request))
+    shareButton.menu = ExportMenuBuilder(title: "Export")
+      .export(title: "Text", export: RequestExporter.txtExport(request: request))
+      .export(title: "Curl", export: RequestExporter.curlExport(request: request))
       .build()
   }
 
@@ -160,10 +171,6 @@ final class DetailViewController: UICollectionViewController {
         sectionSnapshot.append(item.map { ListItem.overview($0)})
       case .group(let items):
         sectionSnapshot.append(items)
-        items.forEach { item in
-          guard case .header(let fields) = item else { return }
-          sectionSnapshot.append(fields.fields.map(ListItem.field), to: item)
-        }
       }
       dataSource.apply(sectionSnapshot, to: sectionItem, animatingDifferences: false)
     }
@@ -175,23 +182,15 @@ extension DetailViewController {
   override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
     collectionView.deselectItem(at: indexPath, animated: true)
     guard let cell = dataSource.itemIdentifier(for: indexPath) else { return }
+    let vc = BodyDetailViewController()
 
-    if case .field(let fieldItem) = cell {
-      let indicator = SPIndicatorView(title: "Copied", preset: .done)
-      indicator.presentSide = .bottom
-      indicator.present(duration: 1, haptic: .success)
-      UIPasteboard.general.string = fieldItem.subtitle
-    }
-
-    if case .body(let bodyItem) = cell, let body = bodyItem.body, !body.isEmpty {
-      let vc = BodyDetailViewController()
-      vc.setBody(body)
-      navigationController?.pushViewController(vc, animated: true)
-    }
-
-    if case .overview(let item) = cell, item.disclosure {
-      let vc = BodyDetailViewController()
-      switch item.type {
+    switch cell {
+    case .header(let item):
+      vc.setText(.render(item.headers.map {($0.key, $0.value)}))
+    case .body(let item):
+      if let body = item.body { vc.setBody(body) }
+    case .overview(let overview):
+      switch overview.type {
       case .url: vc.setText(RequestExporter.txtExport(request: request))
       case .error: vc.setText(ErrorFormatter.description(error: request.error!))
       case .metrics:
@@ -199,7 +198,7 @@ extension DetailViewController {
         vc.setText(MetricsExporter.transactionDetail(metrics: metrics))
       default: break
       }
-      navigationController?.pushViewController(vc, animated: true)
     }
+    navigationController?.pushViewController(vc, animated: true)
   }
 }

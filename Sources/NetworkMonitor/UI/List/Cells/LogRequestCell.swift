@@ -42,7 +42,8 @@ final class LogRequestCell: UITableViewCell {
 
   func populate(request: RequestModel){
     logLevelLabel.text = request.scheme?.uppercased()
-    labelLabel.setIconAndText(icon: "tag", text: request.host ?? "-")
+    labelLabel.setIconAndText(icon: "tag", text: request.host ?? "")
+    labelLabel.isHidden = request.host?.isEmpty == true || request.host == nil
     urlLabel.text = request.url
     dateLabel.text = request.date.stringWithFormat(dateFormat: "HH:mm:ss")
   }

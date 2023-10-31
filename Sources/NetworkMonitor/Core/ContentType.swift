@@ -32,8 +32,6 @@ struct ContentType: Hashable, ExpressibleByStringLiteral {
 
 private func parseParameter(_ param: Substring) -> (String, String)? {
   let parts = param.split(separator: "=")
-  guard parts.count == 2, let name = parts.first, let value = parts.last else {
-    return nil
-  }
+  guard parts.count == 2, let name = parts.first, let value = parts.last else { return nil }
   return (name.trimmingCharacters(in: .whitespaces), value.trimmingCharacters(in: .whitespaces))
 }

@@ -17,7 +17,7 @@ public struct NetworkMonitor {
 
   public static func log(
     level: LogLevel,
-    label: String,
+    label: String = "",
     parameters: [String: String] = [:],
     metadata: Data = Data(),
     file: String = #fileID,

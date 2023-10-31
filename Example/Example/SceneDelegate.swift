@@ -35,8 +35,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     just.get("https://github.com/CreateAPI/Get", asyncCompletionHandler: { _ in })
     just.get("https://jsonplaceholder.typicode.com/users", asyncCompletionHandler: { _ in })
 //    just.get("https://jsonplaceholder.typicode.com/photos", asyncCompletionHandler: { _ in })
-    just.get("https://jsonplaceholder.typicode.com//photos", asyncCompletionHandler: { _ in })
+    just.get("http://172.23.0.2:8096/Shows/NextUp?userId=972692f619e043fe8d959bdc3580b614&limit=1", timeout: 5, asyncCompletionHandler: { _ in })
     just.get("https://images.unsplash.com/photo-1696237983389-8ff5b15d3430?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwzOHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=900&q=60", asyncCompletionHandler: { _ in })
-    NetworkMonitor.log(level: .debug(message: "all requests sent"), label: "Network")
+    NetworkMonitor.log(level: .debug(message: "all requests sent"))
   }
 }

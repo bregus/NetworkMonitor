@@ -41,7 +41,11 @@ enum RequestType {
   case request(RequestModel)
 }
 
-struct RequestModel {
+struct RequestModel: Equatable {
+  static func == (lhs: RequestModel, rhs: RequestModel) -> Bool {
+    lhs.id == rhs.id && lhs.state == rhs.state
+  }
+
   enum State {
     case pending, success, failure
   }
