@@ -1,8 +1,8 @@
 import UIKit
 
 final class BodyDetailViewController: UIViewController {
-  private let textView: UITextView = UITextView()
-  private let imageView: UIImageView = UIImageView()
+  private let textView = UITextView()
+  private let imageView = UIImageView()
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -17,13 +17,13 @@ final class BodyDetailViewController: UIViewController {
     if let image = UIImage(data: body) {
       let ratio = view.frame.size.width / image.size.width
       let scaledHeight = image.size.height * ratio
-      imageView.image = image.resize(to: CGSize(width: view.frame.size.width, height: scaledHeight))
+      imageView.image = image.resize(to: CGSize(width: view.frame.size.width - 16, height: scaledHeight))
 
       let source = CGImageSourceCreateWithData(body as! CFMutableData, nil)!
       let metadata = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [AnyHashable: Any]
       textView.attributedText = .render(metadata)
+      imageView.isHidden = false
     } else {
-      imageView.isHidden = true
       textView.attributedText = .render(body)
     }
   }
@@ -48,6 +48,8 @@ final class BodyDetailViewController: UIViewController {
   }
 
   private func setupViews() {
+    imageView.isHidden = true
+
     let scrollView = UIScrollView()
     scrollView.translatesAutoresizingMaskIntoConstraints = false
     view.addSubview(scrollView)
@@ -82,13 +84,5 @@ final class BodyDetailViewController: UIViewController {
     }
     let activity = UIActivityViewController(activityItems: items, applicationActivities: nil)
     present(activity, animated: true)
-  }
-}
-
-extension UIImage {
-  func resize(to size: CGSize) -> UIImage {
-    UIGraphicsImageRenderer(size: size).image { _ in
-      draw(in: CGRect(origin: .zero, size: size))
-    }
   }
 }

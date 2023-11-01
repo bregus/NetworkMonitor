@@ -186,19 +186,33 @@ extension DetailViewController {
 
     switch cell {
     case .header(let item):
+      if item.headers.isEmpty { return }
       vc.setText(.render(item.headers.map {($0.key, $0.value)}))
+      vc.title = "Headers"
     case .body(let item):
-      if let body = item.body { vc.setBody(body) }
+      if let body = item.body { vc.setBody(body); vc.title = "Body" } else { return }
     case .overview(let overview):
       switch overview.type {
-      case .url: vc.setText(RequestExporter.txtExport(request: request))
-      case .error: vc.setText(ErrorFormatter.description(error: request.error!))
+      case .url: 
+        vc.setText(RequestExporter.txtExport(request: request))
+        vc.title = "Overview"
+      case .error:
+        vc.setText(ErrorFormatter.description(error: request.error!))
+        vc.title = "Error"
       case .metrics:
         guard let metrics = request.metrics else { return }
         vc.setText(MetricsExporter.transactionDetail(metrics: metrics))
-      default: break
+        vc.title = "Metrics"
+      default: return
       }
     }
-    navigationController?.pushViewController(vc, animated: true)
+
+    if #available(iOS 15.0, *) {
+      let nav = vc.embended
+      nav.sheetPresentationController?.detents = [.medium(), .large()]
+      present(nav, animated: true)
+    } else {
+      navigationController?.pushViewController(vc, animated: true)
+    }
   }
 }
