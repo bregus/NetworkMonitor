@@ -98,7 +98,7 @@ final public class RequestsViewController: UITableViewController {
     if request.method == LogLevel.method {
       let vc = BodyDetailViewController()
       vc.setText(RequestExporter.logExport(request: request))
-      navigationController?.pushViewController(vc, animated: true)
+      presentAsSheet(vc)
     } else {
       navigationController?.pushViewController(DetailViewController(request: request), animated: true)
     }

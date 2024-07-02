@@ -207,12 +207,6 @@ extension DetailViewController {
       }
     }
 
-    if #available(iOS 15.0, *) {
-      let nav = vc.embended
-      nav.sheetPresentationController?.detents = [.medium(), .large()]
-      present(nav, animated: true)
-    } else {
-      navigationController?.pushViewController(vc, animated: true)
-    }
+    presentAsSheet(vc)
   }
 }

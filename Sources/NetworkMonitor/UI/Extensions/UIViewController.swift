@@ -38,4 +38,14 @@ extension UIViewController {
   var embended: UIViewController {
     UINavigationController(rootViewController: self)
   }
+
+  func presentAsSheet(_ controller: UIViewController) {
+    if #available(iOS 15.0, *) {
+      let nav = controller.embended
+      nav.sheetPresentationController?.detents = [.medium(), .large()]
+      present(nav, animated: true)
+    } else {
+      navigationController?.pushViewController(controller, animated: true)
+    }
+  }
 }
