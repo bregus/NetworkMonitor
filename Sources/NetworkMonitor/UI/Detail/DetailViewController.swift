@@ -206,7 +206,6 @@ extension DetailViewController {
       default: return
       }
     }
-
     presentAsSheet(vc)
   }
 }

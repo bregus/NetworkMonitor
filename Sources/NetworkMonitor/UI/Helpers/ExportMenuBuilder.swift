@@ -13,8 +13,8 @@ final class ExportMenuBuilder {
     return self
   }
 
-  func append(title: String, action: @escaping (UIAction) -> Void) -> Self {
-    actions.append(UIAction(title: title, handler: action))
+  func append(title: String, imageName: String = "", attributes: UIMenuElement.Attributes = [], action: @escaping (UIAction) -> Void) -> Self {
+    actions.append(UIAction(title: title, image: imageName.isEmpty ? nil : UIImage(systemName: imageName), attributes: attributes, handler: action))
     return self
   }
 

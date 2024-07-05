@@ -45,6 +45,12 @@ final class Storage {
     NotificationCenter.default.post(name: .newRequestNotification, object: nil)
   }
 
+  func deleteRequest(_ request: RequestModel) {
+    guard let index = requests.firstIndex(where: { $0 == request }) else { return }
+    _requests.write { $0.remove(at: index) }
+    NotificationCenter.default.post(name: .newRequestNotification, object: nil)
+  }
+
   func sendNotification() {
     UNUserNotificationCenter.current().getDeliveredNotifications { requests in
       guard requests.isEmpty else { return }
