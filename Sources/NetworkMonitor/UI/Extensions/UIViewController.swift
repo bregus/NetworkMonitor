@@ -35,13 +35,13 @@ extension UIViewController {
     }
   }
 
-  var embended: UIViewController {
+  var embedded: UIViewController {
     UINavigationController(rootViewController: self)
   }
 
   func presentAsSheet(_ controller: UIViewController) {
     if #available(iOS 15.0, *) {
-      let nav = controller.embended
+      let nav = controller.embedded
       nav.sheetPresentationController?.detents = [.medium(), .large()]
       present(nav, animated: true)
     } else {

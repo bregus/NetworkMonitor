@@ -1,6 +1,6 @@
 import UIKit
 
-final class ExportMenuBuilder {
+final class MenuBuilder {
   private let title: String
   private var actions: [UIAction] = []
 

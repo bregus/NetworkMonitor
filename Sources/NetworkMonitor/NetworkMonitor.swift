@@ -19,7 +19,7 @@ public struct NetworkMonitor {
 
   public static func presentNetworkMonitor() {
     guard let topController = UIViewController.currentViewController(), !(topController is RequestsViewController) else { return }
-    topController.present(RequestsViewController().embended, animated: true)
+    topController.present(RequestsViewController().embedded, animated: true)
   }
 
   public static func log(

@@ -29,7 +29,7 @@ final class DetailViewController: UICollectionViewController {
     cell.contentConfiguration = content
 
     if !sectionItem.headers.isEmpty {
-      cell.accessories = [.disclosureIndicator(options: .init(tintColor: .systemBlue))]
+      cell.accessories = [.disclosureIndicator()]
     }
   }
 
@@ -43,7 +43,7 @@ final class DetailViewController: UICollectionViewController {
     content.secondaryText = body.body?.weight ?? "0 bytes"
     cell.contentConfiguration = content
     if let body = body.body, !body.isEmpty {
-      cell.accessories = [.disclosureIndicator(options: .init(tintColor: .systemBlue))]
+      cell.accessories = [.disclosureIndicator()]
     }
   }
 
@@ -151,7 +151,7 @@ final class DetailViewController: UICollectionViewController {
   private func setupNavigationItems() {
     let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: nil)
     navigationItem.rightBarButtonItem = shareButton
-    shareButton.menu = ExportMenuBuilder(title: "Export")
+    shareButton.menu = MenuBuilder(title: "Export")
       .export(title: "Text", export: RequestExporter.txtExport(request: request))
       .export(title: "Curl", export: RequestExporter.curlExport(request: request))
       .build()

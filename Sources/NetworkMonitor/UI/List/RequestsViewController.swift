@@ -2,6 +2,24 @@ import UIKit
 import Combine
 
 final public class RequestsViewController: UITableViewController {
+  enum CategoryType: String, CaseIterable {
+    typealias Filter = () -> [RequestModel]
+    case network
+    case log
+    case all
+
+    var filter: Filter {
+      switch self {
+      case .network:
+        return { Storage.shared.requests.filter{ $0.method != LogLevel.method } }
+      case .log:
+        return { Storage.shared.requests.filter{ $0.method == LogLevel.method } }
+      case .all:
+        return { Storage.shared.requests }
+      }
+    }
+  }
+
   private let searchController = UISearchController(searchResultsController: nil)
   private var filteredRequests: [RequestModel] { filterRequests() }
   private var store = Set<AnyCancellable>()
@@ -42,12 +60,12 @@ final public class RequestsViewController: UITableViewController {
   }
 
   private func updateSegments() {
-    searchController.searchBar.scopeButtonTitles = FilterType.allCases.map { "\($0.rawValue.capitalized)(\($0.filter().count))" }
+    searchController.searchBar.scopeButtonTitles = CategoryType.allCases.map { "\($0.rawValue.capitalized)(\($0.filter().count))" }
   }
 
   private func filterRequests() -> [RequestModel] {
     let filterCategory: () -> [RequestModel] = {
-      FilterType.allCases[self.searchController.searchBar.selectedScopeButtonIndex].filter()
+      CategoryType.allCases[self.searchController.searchBar.selectedScopeButtonIndex].filter()
     }
     guard let searchText = searchController.searchBar.text, !searchText.isEmpty else { return filterCategory() }
     return filterCategory()
@@ -79,7 +97,7 @@ final public class RequestsViewController: UITableViewController {
     let gearItem = UIBarButtonItem(image: UIImage(systemName: "gear"), style: .plain, target: self, action: nil)
 
     navigationItem.rightBarButtonItem = gearItem
-    gearItem.menu = ExportMenuBuilder()
+    gearItem.menu = MenuBuilder()
       .append(title: "Clear", imageName: "eraser.fill", attributes: .destructive) { _ in Storage.shared.clearRequests() }
       .build()
   }
@@ -131,7 +149,7 @@ extension RequestsViewController {
   public override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
     let request = filteredRequests[indexPath.item]
     let actionProvider: UIContextMenuActionProvider = { _ in
-      ExportMenuBuilder()
+      MenuBuilder()
         .export(title: "Export", export: RequestExporter.txtExport(request: request))
         .append(title: "Copy URL") { _ in UIPasteboard.general.string = request.url }
         .append(title: "Delete", attributes: .destructive) { _ in Storage.shared.deleteRequest(request) }
