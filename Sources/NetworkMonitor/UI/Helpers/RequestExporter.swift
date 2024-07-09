@@ -8,19 +8,21 @@ final class RequestExporter {
     txt.append(overview(request: request))
     txt.append("\n".value())
     if !short {
-      txt.append("Request Header\n".header())
+      txt.append("Request Headers\n".header())
       txt.append(header(request.requestHeaders))
       txt.append("\n".value())
       txt.append("Request Body\n".header())
       txt.append(body(request.requestBody))
       txt.append("\n\n".value())
-      txt.append("Response Header\n".header())
+      txt.append("Response Headers\n".header())
       txt.append(header(request.responseHeaders))
       txt.append("\n".value())
     }
     txt.append("Response Body\n".header())
     if let contentType = request.responseContentType {
       txt.append(contentType.isJSON ? body(request.responseBody) : contentType.rawValue.value())
+    } else {
+      txt.append("-".value())
     }
     txt.append("\n\n".value())
     return txt
