@@ -40,7 +40,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     just.get("https://images.unsplash.com/photo-1696237983389-8ff5b15d3430?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwzOHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=900&q=60", asyncCompletionHandler: { _ in })
     just.get("http://msp1-chel2.is74.ru:3101/v1/contacts", asyncCompletionHandler: { _ in })
 
-    JustOf<HTTP>(session: URLSession(configuration: URLSessionConfiguration.default)).get("https://cdn.cams.is74.ru/snapshot?uuid=8065952c-84b4-47ff-af55-b70ed40e261f&lossy=1&token=bearer-9649662e9a6f9af1b719b99518b070cd", asyncCompletionHandler: { _ in })
+    let just2 = JustOf<HTTP>(session: URLSession(configuration: URLSessionConfiguration.default))
+    just2.get("https://cdn.cams.is74.ru/snapshot?uuid=8065952c-84b4-47ff-af55-b70ed40e261f&lossy=1&token=bearer-9649662e9a6f9af1b719b99518b070cd", asyncCompletionHandler: { _ in })
 
     NetworkMonitor.log(level: .debug(message: "all requests sent"))
   }

@@ -100,7 +100,7 @@ final class DetailViewController: UICollectionViewController {
         title: "Metrics",
         color: .systemOrange,
         subtitle: metrics.totalTransferSize.totalBytes,
-        disclosure: true, type: .metrics)
+        disclosure: true, inline: false, type: .metrics)
       )
       items.append(OverviewItem(icon: "apple.terminal", title: "cURL Represenation", disclosure: true, type: .curl))
     }
@@ -201,9 +201,7 @@ extension DetailViewController {
         vc.title = "Error"
       case .metrics:
         guard let metrics = request.metrics else { return }
-        vc.setText(MetricsExporter.transactionDetail(metrics: metrics))
-        vc.title = "Metrics"
-        navigationController?.pushViewController(vc, animated: true)
+        navigationController?.pushViewController(MetricsViewController(metrics: metrics), animated: true)
         return
       case .curl:
         guard let text = RequestExporter.curlExport(request: request) else { return }

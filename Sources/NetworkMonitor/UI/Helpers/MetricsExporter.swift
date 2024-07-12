@@ -8,27 +8,21 @@
 import Foundation
 
 final class MetricsExporter {
-  static func transactionDetail(metrics: Metrics) -> NSAttributedString {
+  static func transactionDetail(transaction: TransactionMetrics) -> NSAttributedString {
     let text = NSMutableAttributedString()
-    metrics.transactions.forEach {
-      text.append(RequestExporter.overview(request: $0.request))
-      text.append("\n".key())
-      text.append(transferSizes(metrics: $0))
-      text.append("\n".key())
-      text.append(protocolFrom(metrics: $0))
-      text.append("\n".key())
-      text.append(makeTiming(for: $0))
-      text.append("\n".key())
-      text.append(conditions(metrics: $0))
-      text.append("\n\n".key())
-    }
+    text.append(makeTiming(for: transaction))
+    text.append("\n".key())
+    text.append(transferSizes(metrics: transaction))
+    text.append("\n".key())
+    text.append(protocolFrom(metrics: transaction))
+    text.append("\n".key())
+    text.append(conditions(metrics: transaction))
+    text.append("\n\n".key())
     return text
   }
 
   private static func transferSizes(metrics: TransactionMetrics) -> NSAttributedString {
     var items = [(String, String)]()
-    items.append(("Fetch Type", metrics.fetchType.title + "\n"))
-    
     items.append(("Request Headers", metrics.transferSize.requestHeaderBytesSent.byteCount))
     items.append(("Request Body", metrics.transferSize.requestBodyBytesSent.byteCount))
     items.append(("Request Body (Encoded)", metrics.transferSize.requestBodyBytesBeforeEncoding.byteCount + "\n"))
@@ -140,13 +134,13 @@ enum DurationFormatter {
 }
 
 extension URLSessionTaskMetrics.ResourceFetchType {
-    var title: String {
-        switch self {
-        case .networkLoad: return "Network Load"
-        case .localCache: return "Cache Lookup"
-        case .serverPush: return "Server Push"
-        case .unknown: return "Unknown Fetch Type"
-        default: return "Unknown Fetch Type"
-        }
+  var title: String {
+    switch self {
+    case .networkLoad: return "Network Load"
+    case .localCache: return "Cache Lookup"
+    case .serverPush: return "Server Push"
+    case .unknown: return "Unknown Fetch Type"
+    default: return "Unknown Fetch Type"
     }
+  }
 }

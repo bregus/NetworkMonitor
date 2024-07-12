@@ -156,6 +156,7 @@ final public class RequestsViewController: UITableViewController {
   // MARK: - Navigation
   private func addNavigationItems() {
     navigationItem.rightBarButtonItem = settingsBarButton
+    settingsBarButton.menu = UIMenu(children: settingsMenu)
   }
 
   private func openRequestDetailVC(request: RequestModel) {

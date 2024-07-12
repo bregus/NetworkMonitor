@@ -20,7 +20,7 @@ extension UIMenu {
   static func exportMenu(for request: RequestModel) -> UIMenu {
     UIMenu(title: "Share") {
       UIAction(title: "Text") { _ in self.openShareSheet(item: RequestExporter.txtExport(request: request)) }
-      UIAction(title: "Curl") { _ in self.openShareSheet(item: RequestExporter.curlExport(request: request)) }
+      UIAction(title: "cURL") { _ in self.openShareSheet(item: RequestExporter.curlExport(request: request)) }
     }
   }
 

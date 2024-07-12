@@ -27,7 +27,7 @@ struct TransferSizeInfo {
   var responseBodyBytesReceived: Int64 = 0
 
   var totalBytes: String {
-    "Sent: \(totalBytesSent.byteCount)\nReceived: \(totalBytesReceived.byteCount)"
+    "⇧ \(totalBytesSent.byteCount)  ⇩ \(totalBytesReceived.byteCount)"
   }
 
   init() {}
@@ -91,6 +91,7 @@ struct TransactionMetrics {
     self.request = RequestModel(request: metrics.request as NSURLRequest, session: nil)
     request.updateWith(response: metrics.response)
     self.timing = TransactionTimingInfo(metrics: metrics)
+    request.duration = timing.duration ?? 0
     self.networkProtocol = metrics.networkProtocolName
     self.type = (metrics.resourceFetchType == .networkLoad ? nil :  metrics.resourceFetchType.rawValue)
     self.transferSize = TransferSizeInfo(metrics: metrics)
@@ -139,7 +140,7 @@ struct TransactionTimingInfo {
     guard let startDate = fetchStartDate, let endDate = responseEndDate else {
       return nil
     }
-    return max(0, endDate.timeIntervalSince(startDate))
+    return max(0, endDate.timeIntervalSince(startDate) * 1000)
   }
 
   init(metrics: URLSessionTaskTransactionMetrics) {

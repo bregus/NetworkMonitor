@@ -8,6 +8,9 @@ final class RequestExporter {
     txt.append(overview(request: request))
     txt.append("\n".value())
     if !short {
+      txt.append("Cookies\n".header())
+      txt.append((request.cookies.isEmpty ? "-" : request.cookies).value())
+      txt.append("\n\n".value())
       txt.append("Request Headers\n".header())
       txt.append(header(request.requestHeaders))
       txt.append("\n".value())
@@ -79,7 +82,7 @@ final class RequestExporter {
     }
     if request.duration != 0 { overview["Duration"] = request.duration.formattedMilliseconds }
 
-    return .render(overview.sorted(by: >).map {($0.key, $0.value)})
+    return .render(overview.sorted(by: >).map { ($0.key, $0.value) })
   }
 
   static func header(_ headers: [String: String]?) -> NSAttributedString {
