@@ -7,12 +7,15 @@ enum CategoryType: String, CaseIterable {
   case all
 }
 
-enum SortType: String, CaseIterable {
-  case date
-  case duration
-}
-
 extension Array where Element == RequestModel {
+  enum SortType: String {
+    case date, duration
+  }
+
+  enum SortOrder {
+    case increasing, decreasing
+  }
+
   func filter(_ category: CategoryType) -> Self {
     switch category {
     case .network:
@@ -24,12 +27,24 @@ extension Array where Element == RequestModel {
     }
   }
 
-  func sort(_ type: SortType) -> Self {
+  func sort(_ type: SortType, order: SortOrder) -> Self {
     switch type {
     case .date:
-      sorted(by: { $0.date > $1.date })
+      sorted(by: \.date, order: order)
     case .duration:
-      sorted(by: { $0.duration > $1.duration })
+      sorted(by: \.duration, order: order)
+    }
+  }
+
+  func sorted<Value: Comparable>(
+    by keyPath: KeyPath<Self.Element, Value>,
+    order: SortOrder
+  ) -> [Self.Element] {
+    switch order {
+    case .increasing:
+      sorted(by: { $0[keyPath: keyPath]  <  $1[keyPath: keyPath] })
+    case .decreasing:
+      sorted(by: { $0[keyPath: keyPath]  >  $1[keyPath: keyPath] })
     }
   }
 }
@@ -37,9 +52,15 @@ extension Array where Element == RequestModel {
 final public class RequestsViewController: UITableViewController {
   private let searchController = UISearchController(searchResultsController: nil)
   private var filteredRequests: [RequestModel] { filterRequests() }
-  private var sortType: SortType = .date {
+  private var sortType: Array.SortType = .date {
     didSet {
-      addNavigationItems()
+      settingsBarButton.menu = UIMenu(children: settingsMenu)
+      tableView.reloadData()
+    }
+  }
+  private var sortOrder: Array.SortOrder = .decreasing {
+    didSet {
+      settingsBarButton.menu = UIMenu(children: settingsMenu)
       tableView.reloadData()
     }
   }
@@ -47,6 +68,22 @@ final public class RequestsViewController: UITableViewController {
     CategoryType.allCases[self.searchController.searchBar.selectedScopeButtonIndex]
   }
   private var store = Set<AnyCancellable>()
+
+  @MenuBuilder private var settingsMenu: [UIMenuElement] {
+    UIMenu(title: "Sort", systemSymbol: "arrow.up.arrow.down") {
+      UIMenu(options: .displayInline) {
+        UIAction(title: "Date", isOn: sortType == .date) { _ in self.sortType = .date }
+        UIAction(title: "Duration", isOn: sortType == .duration) { _ in self.sortType = .duration }
+      }
+      UIMenu(options: .displayInline) {
+        UIAction(title: "Increasing", isOn: sortOrder == .increasing) { _ in self.sortOrder = .increasing }
+        UIAction(title: "Decreasing", isOn: sortOrder == .decreasing) { _ in self.sortOrder = .decreasing }
+      }
+    }
+    UIAction(title: "Clear", systemSymbol: "eraser.fill", attributes: .destructive) { _ in Storage.shared.clearRequests() }
+  }
+
+  private lazy var settingsBarButton = UIBarButtonItem(image: UIImage(systemName: "gear"), style: .plain, target: self, action: nil)
 
   public override func viewDidLoad() {
     super.viewDidLoad()
@@ -89,7 +126,7 @@ final public class RequestsViewController: UITableViewController {
 
   private func filterRequests() -> [RequestModel] {
     let filterCategory: () -> [RequestModel] = {
-      Storage.shared.requests.filter(self.categoryType).sort(self.sortType)
+      Storage.shared.requests.filter(self.categoryType).sort(self.sortType, order: self.sortOrder)
     }
     guard let searchText = searchController.searchBar.text, !searchText.isEmpty else { return filterCategory() }
     return filterCategory()
@@ -118,17 +155,7 @@ final public class RequestsViewController: UITableViewController {
 
   // MARK: - Navigation
   private func addNavigationItems() {
-    let gearItem = UIBarButtonItem(image: UIImage(systemName: "gear"), style: .plain, target: self, action: nil)
-
-    navigationItem.rightBarButtonItem = gearItem
-    gearItem.menu = MenuBuilder()
-      .append(menu: MenuBuilder(title: "Sort", image: "arrow.up.arrow.down")
-        .append(title: "Date", isOn: sortType == .date) { _ in self.sortType = .date }
-        .append(title: "Duration", isOn: sortType == .duration) { _ in self.sortType = .duration }
-        .build()
-      )
-      .append(title: "Clear", imageName: "eraser.fill", attributes: .destructive) { _ in Storage.shared.clearRequests() }
-      .build()
+    navigationItem.rightBarButtonItem = settingsBarButton
   }
 
   private func openRequestDetailVC(request: RequestModel) {
@@ -178,11 +205,11 @@ extension RequestsViewController {
   public override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
     let request = filteredRequests[indexPath.item]
     let actionProvider: UIContextMenuActionProvider = { _ in
-      MenuBuilder()
-        .append(menu: MenuBuilder.exportMenu(for: request))
-        .append(title: "Copy URL") { _ in UIPasteboard.general.string = request.url }
-        .append(title: "Delete", attributes: .destructive) { _ in Storage.shared.deleteRequest(request) }
-        .build()
+      UIMenu {
+        UIMenu.exportMenu(for: request)
+        UIAction(title: "Copy URL") { _ in UIPasteboard.general.string = request.url }
+        UIAction(title: "Delete", attributes: .destructive) { _ in Storage.shared.deleteRequest(request) }
+      }
     }
     return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: { () -> UIViewController? in
       let vc = PreviewController()

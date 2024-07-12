@@ -1,46 +1,47 @@
 import UIKit
 
-final class MenuBuilder {
-  private let title: String
-  private let image: String
-  private var actions: [UIMenuElement] = []
-
-  init(title: String = "", image: String = "") {
-    self.title = title
-    self.image = image
+@resultBuilder
+struct MenuBuilder {
+  static func buildBlock(_ components: UIMenuElement...) -> [UIMenuElement] {
+    components
   }
+}
 
-  func append(title: String, imageName: String = "", isOn: Bool = false, attributes: UIMenuElement.Attributes = [], action: @escaping (UIAction) -> Void) -> Self {
-    let action = UIAction(title: title, image: imageName.isEmpty ? nil : UIImage(systemName: imageName), attributes: attributes, handler: action)
-    action.state = isOn ? .on : .off
-    actions.append(action)
-    return self
-  }
-
-  func append(menu: UIMenu) -> Self {
-    actions.append(menu)
-    return self
-  }
-
-  func build() -> UIMenu {
-    return UIMenu(title: title, image: UIImage(systemName: image), children: actions)
+extension UIMenu {
+  convenience init(
+    title: String = "", systemSymbol: String = "",
+    options: Options = .init(), @MenuBuilder children: () -> [UIMenuElement]
+  ) {
+    self.init(
+      title: title, image: systemSymbol.isEmpty ? nil : UIImage(systemName: systemSymbol),
+      options: options, children: children())
   }
 
   static func exportMenu(for request: RequestModel) -> UIMenu {
-    MenuBuilder(title: "Export")
-      .export(title: "Text", export: RequestExporter.txtExport(request: request))
-      .export(title: "Curl", export: RequestExporter.curlExport(request: request))
-      .build()
+    UIMenu(title: "Share") {
+      UIAction(title: "Text") { _ in self.openShareSheet(item: RequestExporter.txtExport(request: request)) }
+      UIAction(title: "Curl") { _ in self.openShareSheet(item: RequestExporter.curlExport(request: request)) }
+    }
   }
 
-  private func openShareSheet(item: Any?) {
+  static private func openShareSheet(item: Any?) {
     guard let item else { return }
     let activity = UIActivityViewController(activityItems: [item], applicationActivities: nil)
     UIViewController.currentViewController()?.present(activity, animated: true)
   }
+}
 
-  private func export(title: String, export: Any?) -> Self {
-    actions.append(UIAction(title: title) { _ in self.openShareSheet(item: export) })
-    return self
+extension UIAction {
+  convenience init(
+    title: String,
+    systemSymbol: String = "",
+    isOn: Bool = false,
+    attributes: UIMenuElement.Attributes = [],
+    handler: @escaping (UIAction) -> Void
+  ) {
+    self.init(
+      title: title, image: systemSymbol.isEmpty ? nil : UIImage(systemName: systemSymbol),
+      attributes: attributes, state: isOn ? .on : .off, handler: handler
+    )
   }
 }

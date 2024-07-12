@@ -151,7 +151,7 @@ final class DetailViewController: UICollectionViewController {
   private func setupNavigationItems() {
     let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: nil)
     navigationItem.rightBarButtonItem = shareButton
-    shareButton.menu = MenuBuilder.exportMenu(for: request)
+    shareButton.menu = UIMenu.exportMenu(for: request)
   }
 
   // MARK: - Setup snapshots
@@ -203,6 +203,8 @@ extension DetailViewController {
         guard let metrics = request.metrics else { return }
         vc.setText(MetricsExporter.transactionDetail(metrics: metrics))
         vc.title = "Metrics"
+        navigationController?.pushViewController(vc, animated: true)
+        return
       case .curl:
         guard let text = RequestExporter.curlExport(request: request) else { return }
         vc.setText(text)
