@@ -1,6 +1,5 @@
 import UIKit
 
-@available(iOS 13, *)
 final class LogRequestCell: UITableViewCell {
   private let logLevelLabel: UILabel = UILabel()
   private let labelLabel: UILabel = UILabel()
@@ -40,7 +39,7 @@ final class LogRequestCell: UITableViewCell {
     fatalError("init(coder:) has not been implemented")
   }
 
-  func populate(request: RequestModel){
+  func configure(with request: RequestModel) {
     logLevelLabel.text = request.scheme?.uppercased()
     labelLabel.setIconAndText(icon: "tag", text: request.host ?? "")
     labelLabel.isHidden = request.host?.isEmpty == true || request.host == nil

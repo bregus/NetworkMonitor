@@ -25,7 +25,7 @@ struct HeaderItem: Hashable {
 
 struct OverviewItem: Hashable {
   enum ItemType {
-    case status, url, error, metrics
+    case status, url, error, metrics, curl
   }
 
   var icon: String = ""

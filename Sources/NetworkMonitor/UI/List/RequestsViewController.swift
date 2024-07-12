@@ -1,27 +1,51 @@
 import UIKit
 import Combine
 
-final public class RequestsViewController: UITableViewController {
-  enum CategoryType: String, CaseIterable {
-    typealias Filter = () -> [RequestModel]
-    case network
-    case log
-    case all
+enum CategoryType: String, CaseIterable {
+  case network
+  case log
+  case all
+}
 
-    var filter: Filter {
-      switch self {
-      case .network:
-        return { Storage.shared.requests.filter{ $0.method != LogLevel.method } }
-      case .log:
-        return { Storage.shared.requests.filter{ $0.method == LogLevel.method } }
-      case .all:
-        return { Storage.shared.requests }
-      }
+enum SortType: String, CaseIterable {
+  case date
+  case duration
+}
+
+extension Array where Element == RequestModel {
+  func filter(_ category: CategoryType) -> Self {
+    switch category {
+    case .network:
+      filter{ $0.method != LogLevel.method }
+    case .log:
+      filter{ $0.method == LogLevel.method }
+    case .all:
+      self
     }
   }
 
+  func sort(_ type: SortType) -> Self {
+    switch type {
+    case .date:
+      sorted(by: { $0.date > $1.date })
+    case .duration:
+      sorted(by: { $0.duration > $1.duration })
+    }
+  }
+}
+
+final public class RequestsViewController: UITableViewController {
   private let searchController = UISearchController(searchResultsController: nil)
   private var filteredRequests: [RequestModel] { filterRequests() }
+  private var sortType: SortType = .date {
+    didSet {
+      addNavigationItems()
+      tableView.reloadData()
+    }
+  }
+  private var categoryType: CategoryType {
+    CategoryType.allCases[self.searchController.searchBar.selectedScopeButtonIndex]
+  }
   private var store = Set<AnyCancellable>()
 
   public override func viewDidLoad() {
@@ -60,12 +84,12 @@ final public class RequestsViewController: UITableViewController {
   }
 
   private func updateSegments() {
-    searchController.searchBar.scopeButtonTitles = CategoryType.allCases.map { "\($0.rawValue.capitalized)(\($0.filter().count))" }
+    searchController.searchBar.scopeButtonTitles = CategoryType.allCases.map { "\($0.rawValue.capitalized)(\(Storage.shared.requests.filter($0).count))" }
   }
 
   private func filterRequests() -> [RequestModel] {
     let filterCategory: () -> [RequestModel] = {
-      CategoryType.allCases[self.searchController.searchBar.selectedScopeButtonIndex].filter()
+      Storage.shared.requests.filter(self.categoryType).sort(self.sortType)
     }
     guard let searchText = searchController.searchBar.text, !searchText.isEmpty else { return filterCategory() }
     return filterCategory()
@@ -98,6 +122,11 @@ final public class RequestsViewController: UITableViewController {
 
     navigationItem.rightBarButtonItem = gearItem
     gearItem.menu = MenuBuilder()
+      .append(menu: MenuBuilder(title: "Sort", image: "arrow.up.arrow.down")
+        .append(title: "Date", isOn: sortType == .date) { _ in self.sortType = .date }
+        .append(title: "Duration", isOn: sortType == .duration) { _ in self.sortType = .duration }
+        .build()
+      )
       .append(title: "Clear", imageName: "eraser.fill", attributes: .destructive) { _ in Storage.shared.clearRequests() }
       .build()
   }
@@ -123,12 +152,12 @@ extension RequestsViewController {
     let request = filteredRequests[indexPath.item]
     if request.method == LogLevel.method {
       let cell = tableView.dequeueCell(LogRequestCell.self, for: indexPath)
-      cell.populate(request: request)
+      cell.configure(with: request)
       cell.accessoryType = .disclosureIndicator
       return cell
     } else {
       let cell = tableView.dequeueCell(RequestCell.self, for: indexPath)
-      cell.populate(request: request)
+      cell.configure(with: request)
       cell.accessoryType = .disclosureIndicator
       return cell
     }
@@ -150,7 +179,7 @@ extension RequestsViewController {
     let request = filteredRequests[indexPath.item]
     let actionProvider: UIContextMenuActionProvider = { _ in
       MenuBuilder()
-        .export(title: "Export", export: RequestExporter.txtExport(request: request))
+        .append(menu: MenuBuilder.exportMenu(for: request))
         .append(title: "Copy URL") { _ in UIPasteboard.general.string = request.url }
         .append(title: "Delete", attributes: .destructive) { _ in Storage.shared.deleteRequest(request) }
         .build()
@@ -158,7 +187,7 @@ extension RequestsViewController {
     return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: { () -> UIViewController? in
       let vc = PreviewController()
       vc.setText(RequestExporter.txtExport(request: request, short: true))
-      return vc
+      return nil
     }, actionProvider: actionProvider)
   }
 

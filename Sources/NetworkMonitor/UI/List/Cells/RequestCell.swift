@@ -1,6 +1,5 @@
 import UIKit
 
-@available(iOS 13, *)
 final class RequestCell: UITableViewCell {
   private let codeIndicatorView: UIView = UIView()
   private let methodLabel: UILabel = UILabel()
@@ -56,7 +55,7 @@ final class RequestCell: UITableViewCell {
     fatalError("init(coder:) has not been implemented")
   }
 
-  func populate(request: RequestModel){
+  func configure(with request: RequestModel){
     let status = StatusModel(request: request)
     codeIndicatorView.layer.cornerRadius = 6
     methodLabel.text = request.method?.uppercased()

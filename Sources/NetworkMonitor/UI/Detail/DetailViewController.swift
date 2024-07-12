@@ -47,6 +47,8 @@ final class DetailViewController: UICollectionViewController {
     }
   }
 
+  private var request: RequestModel
+  private var store = Set<AnyCancellable>()
   private var sections: [Section] {[
     .overview(overview),
     .group([
@@ -100,6 +102,7 @@ final class DetailViewController: UICollectionViewController {
         subtitle: metrics.totalTransferSize.totalBytes,
         disclosure: true, type: .metrics)
       )
+      items.append(OverviewItem(icon: "apple.terminal", title: "cURL Represenation", disclosure: true, type: .curl))
     }
     return items
   }
@@ -117,9 +120,6 @@ final class DetailViewController: UICollectionViewController {
       return collectionView.dequeueConfiguredReusableCell(using: self.bodyCellRegistration, for: indexPath, item: bodyItem)
     }
   }
-
-  private var request: RequestModel
-  private var store = Set<AnyCancellable>()
 
   init(request: RequestModel) {
     let layoutConfig = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
@@ -151,10 +151,7 @@ final class DetailViewController: UICollectionViewController {
   private func setupNavigationItems() {
     let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: nil)
     navigationItem.rightBarButtonItem = shareButton
-    shareButton.menu = MenuBuilder(title: "Export")
-      .export(title: "Text", export: RequestExporter.txtExport(request: request))
-      .export(title: "Curl", export: RequestExporter.curlExport(request: request))
-      .build()
+    shareButton.menu = MenuBuilder.exportMenu(for: request)
   }
 
   // MARK: - Setup snapshots
@@ -186,23 +183,30 @@ extension DetailViewController {
 
     switch cell {
     case .header(let item):
-      if item.headers.isEmpty { return }
+      guard !item.headers.isEmpty else { return }
       vc.setText(.render(item.headers.map {($0.key, $0.value)}))
       vc.title = "Headers"
     case .body(let item):
-      if let body = item.body { vc.setBody(body); vc.title = "Body" } else { return }
+      guard let body = item.body else { return }
+      vc.setBody(body)
+      vc.title = "Body"
     case .overview(let overview):
       switch overview.type {
       case .url: 
         vc.setText(RequestExporter.txtExport(request: request))
         vc.title = "Overview"
       case .error:
-        vc.setText(ErrorFormatter.description(error: request.error!))
+        guard let error = request.error else { return }
+        vc.setText(ErrorFormatter.description(error: error))
         vc.title = "Error"
       case .metrics:
         guard let metrics = request.metrics else { return }
         vc.setText(MetricsExporter.transactionDetail(metrics: metrics))
         vc.title = "Metrics"
+      case .curl:
+        guard let text = RequestExporter.curlExport(request: request) else { return }
+        vc.setText(text)
+        vc.title = "cURL"
       default: return
       }
     }
