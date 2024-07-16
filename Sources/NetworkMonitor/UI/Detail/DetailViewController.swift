@@ -35,7 +35,6 @@ final class DetailViewController: UICollectionViewController {
 
   let bodyCellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, BodyItem> {
     (cell, indexPath, body) in
-
     var content = UIListContentConfiguration.valueCell()
     content.text = body.title
     content.textProperties.font = .systemFont(ofSize: 16, weight: .medium)
@@ -49,35 +48,37 @@ final class DetailViewController: UICollectionViewController {
 
   private var request: RequestModel
   private var store = Set<AnyCancellable>()
-  private var sections: [Section] {[
-    .overview(overview),
-    .group([
-      .header(HeaderItem(
-        icon: "list.bullet.rectangle",
-        title: "Request headers",
-        headers: request.requestHeaders
-      )),
-      .body(BodyItem(
-        icon: "arrow.up.circle.fill",
-        title: "Request body",
-        body: request.requestBody)
-      )
-    ]),
-    .group([
-      .header(HeaderItem(
-        icon: "list.bullet.rectangle",
-        title: "Response headers",
-        headers: request.responseHeaders
-      )),
-      .body(BodyItem(
-        icon: "arrow.down.circle.fill",
-        title: "Response body",
-        body: request.responseBody)
-      )
-    ])
-  ]}
+  private lazy var sections: [Section] = {
+    return [
+      .overview(overview),
+      .group([
+        .header(HeaderItem(
+          icon: "list.bullet.rectangle",
+          title: "Request headers",
+          headers: request.requestHeaders
+        )),
+        .body(BodyItem(
+          icon: "arrow.up.circle.fill",
+          title: "Request body",
+          body: request.requestBody)
+        )
+      ]),
+      .group([
+        .header(HeaderItem(
+          icon: "list.bullet.rectangle",
+          title: "Response headers",
+          headers: request.responseHeaders
+        )),
+        .body(BodyItem(
+          icon: "arrow.down.circle.fill",
+          title: "Response body",
+          body: request.responseBody)
+        )
+      ])
+    ]
+  }()
 
-  private var overview: [OverviewItem] {
+  private lazy var overview: [OverviewItem] = {
     var items = [OverviewItem]()
     let status = StatusModel(request: request)
     items.append(OverviewItem(
@@ -105,7 +106,7 @@ final class DetailViewController: UICollectionViewController {
       items.append(OverviewItem(icon: "apple.terminal", title: "cURL Represenation", disclosure: true, type: .curl))
     }
     return items
-  }
+  }()
 
   private lazy var dataSource = UICollectionViewDiffableDataSource<Section, ListItem>(collectionView: collectionView) {
     (collectionView, indexPath, listItem) -> UICollectionViewCell? in

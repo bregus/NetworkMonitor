@@ -27,7 +27,7 @@ struct TransferSizeInfo {
   var responseBodyBytesReceived: Int64 = 0
 
   var totalBytes: String {
-    "⇧ \(totalBytesSent.byteCount)  ⇩ \(totalBytesReceived.byteCount)"
+    "↑ \(totalBytesSent.byteCount)  ↓ \(totalBytesReceived.byteCount)"
   }
 
   init() {}

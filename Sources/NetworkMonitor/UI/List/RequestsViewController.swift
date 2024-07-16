@@ -212,11 +212,7 @@ extension RequestsViewController {
         UIAction(title: "Delete", attributes: .destructive) { _ in Storage.shared.deleteRequest(request) }
       }
     }
-    return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: { () -> UIViewController? in
-      let vc = PreviewController()
-      vc.setText(RequestExporter.txtExport(request: request, short: true))
-      return nil
-    }, actionProvider: actionProvider)
+    return UIContextMenuConfiguration(identifier: indexPath as NSCopying, previewProvider: nil, actionProvider: actionProvider)
   }
 
   public override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {

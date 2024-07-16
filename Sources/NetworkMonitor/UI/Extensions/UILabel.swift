@@ -16,7 +16,7 @@ extension UILabel {
     let attachmentString = NSAttributedString(attachment: imageAttachment)
     let completeText = NSMutableAttributedString(string: "")
     completeText.append(attachmentString)
-    let textAfterIcon = NSAttributedString(string: text)
+    let textAfterIcon = NSAttributedString(string: " \(text)")
     completeText.append(textAfterIcon)
     textAlignment = .center
     attributedText = completeText

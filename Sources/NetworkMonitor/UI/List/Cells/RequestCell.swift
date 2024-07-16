@@ -1,7 +1,7 @@
 import UIKit
 
 final class RequestCell: UITableViewCell {
-  private let codeIndicatorView: UIView = UIView()
+  private let codeIndicatorView: UIImageView = UIImageView()
   private let methodLabel: UILabel = UILabel()
   private let codeLabel: UILabel = UILabel()
   private let durationLabel: UILabel = UILabel()
@@ -15,7 +15,7 @@ final class RequestCell: UITableViewCell {
 
     let hstack = UIStackView(arrangedSubviews: [codeIndicatorView, codeLabel, UIView(), dateLabel])
     hstack.spacing = 4
-    let hstack2 = UIStackView(arrangedSubviews: [methodLabel, requestWeight, responseWeight, durationLabel, UIView()])
+    let hstack2 = UIStackView(arrangedSubviews: [methodLabel, requestWeight, responseWeight, UIView(), durationLabel])
     hstack2.spacing = 32
     let vstack = UIStackView(arrangedSubviews: [hstack, urlLabel, hstack2])
     vstack.spacing = 8
@@ -36,9 +36,7 @@ final class RequestCell: UITableViewCell {
       vstack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
       vstack.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 12),
       vstack.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -12),
-      vstack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12),
-      codeIndicatorView.heightAnchor.constraint(equalToConstant: 12),
-      codeIndicatorView.widthAnchor.constraint(equalToConstant: 12)
+      vstack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12)
     ])
 
     methodLabel.textColor = .secondaryLabel
@@ -57,10 +55,10 @@ final class RequestCell: UITableViewCell {
 
   func configure(with request: RequestModel){
     let status = StatusModel(request: request)
-    codeIndicatorView.layer.cornerRadius = 6
     methodLabel.text = request.method?.uppercased()
 
-    codeIndicatorView.backgroundColor = status.tint
+    codeIndicatorView.image = UIImage(systemName: status.systemImage)
+    codeIndicatorView.tintColor = status.tint
     codeLabel.textColor = status.tint
     codeLabel.text = status.title
 

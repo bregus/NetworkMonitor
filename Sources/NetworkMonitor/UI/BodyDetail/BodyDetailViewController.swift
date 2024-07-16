@@ -18,11 +18,12 @@ final class BodyDetailViewController: UIViewController {
       let ratio = view.frame.size.width / image.size.width
       let scaledHeight = image.size.height * ratio
       imageView.image = image.resize(to: CGSize(width: view.frame.size.width - 16, height: scaledHeight))
-
-      let source = CGImageSourceCreateWithData(body as! CFMutableData, nil)!
-      let metadata = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [AnyHashable: Any]
-      textView.attributedText = .render(metadata)
       imageView.isHidden = false
+
+      if let source = CGImageSourceCreateWithData(body as CFData, nil) {
+        let metadata = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [AnyHashable: Any]
+        textView.attributedText = .render(metadata)
+      }
     } else {
       textView.attributedText = .render(body)
     }

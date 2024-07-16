@@ -7,24 +7,7 @@
 
 import Foundation
 
-private protocol Lock {
-  func lock()
-  func unlock()
-}
-
-extension Lock {
-  func around<T>(_ closure: () throws -> T) rethrows -> T {
-    lock(); defer { unlock() }
-    return try closure()
-  }
-
-  func around(_ closure: () throws -> Void) rethrows {
-    lock(); defer { unlock() }
-    try closure()
-  }
-}
-
-final class UnfairLock: Lock {
+final class UnfairLock {
   private let unfairLock: os_unfair_lock_t
 
   init() {
@@ -36,6 +19,17 @@ final class UnfairLock: Lock {
     unfairLock.deinitialize(count: 1)
     unfairLock.deallocate()
   }
+
+  func around<T>(_ closure: () throws -> T) rethrows -> T {
+    lock(); defer { unlock() }
+    return try closure()
+  }
+
+  func around(_ closure: () throws -> Void) rethrows {
+    lock(); defer { unlock() }
+    try closure()
+  }
+
 
   fileprivate func lock() {
     os_unfair_lock_lock(unfairLock)
@@ -55,7 +49,6 @@ final class Protected<T> {
     self.value = value
   }
 
-  /// The contained value. Unsafe for anything more than direct read or write.
   var wrappedValue: T {
     get { lock.around { value } }
     set { lock.around { value = newValue } }
