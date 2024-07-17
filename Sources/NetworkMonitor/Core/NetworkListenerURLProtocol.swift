@@ -29,7 +29,7 @@ public final class NetwrokListenerUrlProtocol: URLProtocol {
   }
 
   public override func startLoading() {
-    let newRequest = ((request as NSURLRequest).mutableCopy() as? NSMutableURLRequest)!
+    guard let newRequest = ((request as NSURLRequest).mutableCopy() as? NSMutableURLRequest) else { return }
     NetwrokListenerUrlProtocol.setProperty(true, forKey: Constants.RequestHandledKey, in: newRequest)
     sessionTask = session?.dataTask(with: newRequest as URLRequest)
     sessionTask?.resume()
