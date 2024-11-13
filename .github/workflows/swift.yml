@@ -13,24 +13,9 @@ jobs:
   build:
 
     runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [iphoneos, iphonesimulator]
-        arch: [x86_64, arm64]
-        exclude:
-          - platform: iphoneos
-            arch: x86_64
-        include:
-          # 17.2
-          - platform: iphoneos
-            sys: "ios17.2"
-          - platform: iphonesimulator
-            sys: "ios17.2-simulator"
+
     steps:
     - uses: actions/checkout@v4
     - name: Build
-      run: xcrun swift build \
-          --sdk "$(xcrun --sdk ${{ matrix.platform }} --show-sdk-path)" \
-          -Xswiftc "-target" -Xswiftc "${{ matrix.arch }}-apple-${{ matrix.sys }}"
+      run: xcodebuild test -scheme NetworkMonitor -destination 'platform=iOS Simulator,OS=17.0'
 
